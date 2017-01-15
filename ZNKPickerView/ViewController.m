@@ -7,6 +7,7 @@
 //
 
 #import "ViewController.h"
+#import "ZNKPickerView.h"
 
 @interface ViewController ()
 
@@ -17,6 +18,29 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    
+    UIButton *testButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    testButton.frame = CGRectMake(CGRectGetWidth(self.view.frame) / 2 - 30, CGRectGetHeight(self.view.frame) / 2 - 100, 60, 40);
+    [testButton setTitle:@"测试" forState:UIControlStateNormal];
+    [testButton setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+    [testButton addTarget:self action:@selector(testPickerView) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:testButton];
+    
+}
+
+- (void)testPickerView{
+    [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeActionSheet title:@"这是测试" withObject:@[@"从相册选择",@"拍照"] withOptions:nil hasInput:NO hasNav:NO objectToStringConverter:^NSString *(id obj) {
+        return [obj description];
+    } completion:^(ZNKPickerView *pickerView, NSString *input, NSInteger index, id obj) {
+        
+    } confirmHandler:^(ZNKPickerView *pickerView, NSString *input, NSInteger index, id obj) {
+        
+    }];
+}
+
+- (void)viewDidAppear:(BOOL)animated{
+    [super viewDidAppear:animated];
+    
 }
 
 

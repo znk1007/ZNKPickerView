@@ -15,6 +15,7 @@
 		27EAC5521E2B72CC00ED81A5 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 27EAC5501E2B72CC00ED81A5 /* LaunchScreen.storyboard */; };
 		27EAC55D1E2B72CC00ED81A5 /* ZNKPickerViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EAC55C1E2B72CC00ED81A5 /* ZNKPickerViewTests.m */; };
 		27EAC5681E2B72CC00ED81A5 /* ZNKPickerViewUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EAC5671E2B72CC00ED81A5 /* ZNKPickerViewUITests.m */; };
+		27EAC5781E2B72E700ED81A5 /* ZNKPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EAC5771E2B72E700ED81A5 /* ZNKPickerView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +52,8 @@
 		27EAC5631E2B72CC00ED81A5 /* ZNKPickerViewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZNKPickerViewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		27EAC5671E2B72CC00ED81A5 /* ZNKPickerViewUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ZNKPickerViewUITests.m; sourceTree = "<group>"; };
 		27EAC5691E2B72CC00ED81A5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		27EAC5761E2B72E700ED81A5 /* ZNKPickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZNKPickerView.h; sourceTree = "<group>"; };
+		27EAC5771E2B72E700ED81A5 /* ZNKPickerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZNKPickerView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +104,7 @@
 		27EAC5411E2B72CC00ED81A5 /* ZNKPickerView */ = {
 			isa = PBXGroup;
 			children = (
+				27EAC5751E2B72E700ED81A5 /* PickerView */,
 				27EAC5451E2B72CC00ED81A5 /* AppDelegate.h */,
 				27EAC5461E2B72CC00ED81A5 /* AppDelegate.m */,
 				27EAC5481E2B72CC00ED81A5 /* ViewController.h */,
@@ -138,6 +142,15 @@
 				27EAC5691E2B72CC00ED81A5 /* Info.plist */,
 			);
 			path = ZNKPickerViewUITests;
+			sourceTree = "<group>";
+		};
+		27EAC5751E2B72E700ED81A5 /* PickerView */ = {
+			isa = PBXGroup;
+			children = (
+				27EAC5761E2B72E700ED81A5 /* ZNKPickerView.h */,
+				27EAC5771E2B72E700ED81A5 /* ZNKPickerView.m */,
+			);
+			path = PickerView;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -275,6 +288,7 @@
 			files = (
 				27EAC54A1E2B72CC00ED81A5 /* ViewController.m in Sources */,
 				27EAC5471E2B72CC00ED81A5 /* AppDelegate.m in Sources */,
+				27EAC5781E2B72E700ED81A5 /* ZNKPickerView.m in Sources */,
 				27EAC5441E2B72CC00ED81A5 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -425,6 +439,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = ZNKPickerView/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = HM.ZNKPickerView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -436,6 +451,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = ZNKPickerView/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = HM.ZNKPickerView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
