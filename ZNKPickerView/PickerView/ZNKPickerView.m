@@ -613,6 +613,7 @@ NSString * const ZNKleftInputViewTitle = @"ZNKleftInputViewTitle";
 NSString * const ZNKdefaultDate = @"ZNKdefaultDate";
 NSString * const ZNKdefaultTableRowHeight = @"ZNKdefaultTableRowHeight";
 NSString * const ZNKcoverViewAlpha = @"ZNKcoverViewAlpha";
+NSString * const ZNKcanScroll = @"ZNKcanScroll";
 
 
 #define znk_screenWidth [UIScreen mainScreen].bounds.size.width
@@ -762,6 +763,8 @@ static CGFloat const sheetViewHeight = 216;
 @property (nonatomic, assign) CGRect messageRect;
 /**表格高度*/
 @property (nonatomic, assign) CGFloat tableViewRowHeight;
+/**总试图高度*/
+@property (nonatomic, assign) CGFloat totalViewHeight;
 
 /**选中结果*/
 @property (nonatomic, strong) id result;
@@ -984,14 +987,36 @@ static CGFloat const sheetViewHeight = 216;
         return;
     }
     [self addSubview:self.sheetView];
-    [self.sheetView addSubview:self.toolbarContainerView];
+    CGFloat titleMaxY = 0;
+    CGFloat titleHeight = 0;
+    if (self.title && ![self.title isEqualToString:@""]) {
+        [self.sheetView addSubview:self.titleLabel];
+        titleMaxY = CGRectGetMaxY(self.titleLabel.frame);
+        titleHeight = CGRectGetHeight(self.titleLabel.frame);
+    }
+    
+    CGFloat messageMaxY = 0;
+    CGFloat messageHeight = 0;
+    if (self.message && ![self.message isEqualToString:@""]) {
+        [self.sheetView addSubview:self.messageLabel];
+        messageMaxY = CGRectGetMaxY(self.messageLabel.frame) + 1;
+        messageHeight = CGRectGetHeight(self.messageLabel.frame);
+    }
+    
     [self.sheetView addSubview:self.cancelButton];
-    
-    self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, sheetViewHeight);
-    self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), pickerViewToolbarHeight);
-    [self.toolbarContainerView addSubview:self.pickerToolbar];
-    
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
+    
+    CGFloat totalViewHeight = 44 + titleHeight + messageHeight + self.tableViewRowHeight * 2 + 6;
+    //CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - margin_cancelButton_to_otherButton;
+    if (self.canScroll) {
+        totalViewHeight = 44 + titleHeight + messageHeight + self.tableViewRowHeight * 2 + 6;
+    }else{
+        totalViewHeight = 44 + titleHeight + messageHeight + _pickerViewArray.count * self.tableViewRowHeight + 6;
+    }
+    
+    self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, totalViewHeight);
+    
+    
     _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + 1;
     _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - margin_cancelButton_to_otherButton;
     
@@ -1015,6 +1040,10 @@ static CGFloat const sheetViewHeight = 216;
 }
 
 #pragma mark - getter
+
+- (void)setCanScroll:(BOOL)canScroll{
+    _canScroll = canScroll;
+}
 
 - (CGFloat)coverViewAlpha{
     if ([_options[ZNKcoverViewAlpha] isKindOfClass:[NSNumber class]]) {
@@ -1286,6 +1315,7 @@ static CGFloat const sheetViewHeight = 216;
         _titleLabel.adjustsFontSizeToFitWidth = YES;
         _titleLabel.contentScaleFactor = 0.5;
         _titleLabel.text = self.title ? self.title : @"";
+        _titleLabel.textColor = [UIColor blackColor];
     }
     return _titleLabel;
 }
@@ -1303,7 +1333,7 @@ static CGFloat const sheetViewHeight = 216;
 - (CGRect)messageRect{
     if (self.message && self.tableView) {
         CGRect messageR = [self textRect:self.message size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
-        return CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageR) > self.tableViewRowHeight ? CGRectGetHeight(messageR) : self.tableViewRowHeight);
+        return CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame), CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageR) > self.tableViewRowHeight ? CGRectGetHeight(messageR) : self.tableViewRowHeight);
     }
     return CGRectZero;
 }
@@ -1314,6 +1344,7 @@ static CGFloat const sheetViewHeight = 216;
         _messageLabel.text = self.message ? self.message : @"";
         _messageLabel.textAlignment = NSTextAlignmentCenter;
         _messageLabel.font = [UIFont systemFontOfSize:12];
+        _messageLabel.textColor = [UIColor blackColor];
     }
     return _messageLabel;
 }
