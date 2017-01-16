@@ -29,7 +29,7 @@
 }
 
 - (void)testPickerView{
-    [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeActionSheet title:@"这是测试" withObject:@[@"从相册选择",@"拍照"] withOptions:nil hasInput:NO hasNav:NO objectToStringConverter:^NSString *(id obj) {
+    [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeDateMode title:@"这是测试" withObject:@[@"从相册选择",@"拍照"] withOptions:nil hasInput:NO hasNav:NO objectToStringConverter:^NSString *(id obj) {
         return [obj description];
     } completion:^(ZNKPickerView *pickerView, NSString *input, NSInteger index, id obj) {
         

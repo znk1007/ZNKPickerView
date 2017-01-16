@@ -80,12 +80,8 @@
             self.containerView.frame = CGRectMake(CGRectGetMinX(self.containerView.frame), CGRectGetMinY(self.containerView.frame), CGRectGetWidth(self.containerView.frame), CGRectGetHeight(self.containerView.frame));
         }
         
-        CGFloat between = [UIScreen mainScreen].bounds.size.height - CGRectGetMaxY(self.targetView.frame);
-        if (between < keyboardFrame.size.height + self.contentOffset) {
-            self.containerView.frame = CGRectMake(0, between - (keyboardFrame.size.height  + self.contentOffset), CGRectGetWidth(self.containerView.frame), CGRectGetHeight(self.containerView.frame));
-            if (_keyboardShowHandler) {
-                _keyboardShowHandler(keyboardFrame, note);
-            }
+        if (_keyboardShowHandler) {
+            _keyboardShowHandler(keyboardFrame, note);
         }
     } completion:nil];
 }
@@ -106,6 +102,7 @@
 }
 
 @end
+
 
 @interface MyTextField :UITextField
 
@@ -324,6 +321,22 @@
     return [UIColor colorWithRed:color.red green:color.green blue:color.blue alpha:alpha];
 }
 
+@end
+
+@implementation UIImage (ZNKPickerView)
+
++ (UIImage *)imageWithColor:(UIColor *)color size:(CGSize)size
+{
+    CGRect rect = CGRectMake(0, 0, size.width, size.height);
+    UIGraphicsBeginImageContext(rect.size);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextSetFillColorWithColor(context,color.CGColor);
+    CGContextFillRect(context, rect);
+    UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    return img;
+}
 @end
 
 @protocol ZNKCycleScrollViewDatasource;
@@ -597,12 +610,47 @@
 
 @end
 
+@interface TranslucentToolbar : UIToolbar
+
+@end
+
+@implementation TranslucentToolbar
+
+- (void)drawRect:(CGRect)rect {
+    // do nothing
+}
+
+- (id)initWithFrame:(CGRect)aRect {
+    if ((self = [super initWithFrame:aRect])) {
+        self.opaque = NO;
+        self.backgroundColor = [UIColor clearColor];
+        self.clearsContextBeforeDrawing = YES;
+    }
+    return self;
+}
+@end
+
+NSString * const ZNKCoverViewAlpha = @"ZNKCoverViewAlpha";
+NSString * const ZNKSheetViewBackgroundColor = @"ZNKSheetViewBackgroundColor";
+NSString * const ZNKSheetViewBackgroundImage = @"ZNKSheetViewBackgroundImage";
+
+NSString * const ZNKToolbarBackgroundColor = @"ZNKToolbarBackgroundColor";
+NSString * const ZNKToolbarHasInput = @"ZNKToolbarHasInput";
+NSString * const ZNKToolbarInputLeftView = @"ZNKToolbarInputLeftView";
+NSString * const ZNKToolbarInputPlachodler = @"ZNKToolbarInputPlachodler";
+NSString * const ZNKToolbarBackgroundImage = @"ZNKToolbarBackgroundImage";
+NSString * const ZNKConfirmButtonTitle = @"ZNKConfirmButtonTitle";
+NSString * const ZNKConfirmButtonTitleColor = @"ZNKConfirmButtonTitleColor";
+
+NSString * const ZNKDatePickerBackgroundColor = @"ZNKDatePickerViewBackgroundColor";
+NSString * const ZNKDatePickerBackgroundImage = @"ZNKDatePickerViewBackgroundImage";
+NSString * const ZNKDatePickerTextColor = @"ZNKDatePickerViewTextColor";
+NSString * const ZNKDatePickerDefaultDate = @"ZNKDatePickerDefaultDate";
+
 NSString * const ZNKsuviewsbackgroundColor = @"ZNKsuviewsbackgroundColor";
 NSString * const ZNKtoolbarColor = @"ZNKtoolbarColor";
 NSString * const ZNKcomfirmButtonColor = @"ZNKcomfirmButtonColor";
-NSString * const ZNKconfirmButtonTitle = @"ZNKconfirmButtonTitle";
 NSString * const ZNKselectedObject = @"selectedObject";
-NSString * const ZNKtoolbarBackgroundImage = @"toolbarBackgroundImage";
 NSString * const ZNKtextAlignment = @"textAlignment";
 NSString * const ZNKshowsSelectionIndicator = @"showsSelectionIndicator";
 NSString * const ZNKpickerViewTitleColor = @"ZNKpickerViewTitleColor";
@@ -610,7 +658,6 @@ NSString * const ZNKpickerViewFont = @"ZNKpickerViewFont";
 NSString * const ZNKpickerViewCancelTitle = @"ZNKpickerViewCancelTitle";
 NSString * const ZNKsheetViewViewBackgroundColor = @"ZNKsheetViewViewBackgroundColor";
 NSString * const ZNKleftInputViewTitle = @"ZNKleftInputViewTitle";
-NSString * const ZNKdefaultDate = @"ZNKdefaultDate";
 NSString * const ZNKdefaultTableRowHeight = @"ZNKdefaultTableRowHeight";
 NSString * const ZNKcoverViewAlpha = @"ZNKcoverViewAlpha";
 NSString * const ZNKcanScroll = @"ZNKcanScroll";
@@ -620,20 +667,9 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 #define znk_screenHeight [UIScreen mainScreen].bounds.size.height
 
 
-/** 取消按钮到other按钮之间的间距 */
-static CGFloat const margin_cancelButton_to_otherButton = 5;
-
-/** 底部View弹出的时间 */
-static CGFloat const SheetViewAnimationDuration = 0.25;
-
-/**工具栏高度*/
-static CGFloat const pickerViewToolbarHeight = 44;
-/**选择器高度*/
-static CGFloat const sheetViewHeight = 216;
-
-
 @interface ZNKPickerView ()<UIPickerViewDelegate, UIPickerViewDataSource,ZNKCycleScrollViewDatasource,ZNKCycleScrollViewDelegate, UITextFieldDelegate, UITableViewDelegate,UITableViewDataSource>
 
+#pragma mark - 基本属性
 /** 选择器类型*/
 @property (nonatomic, assign) ZNKPickerType type;
 /**主视图*/
@@ -641,11 +677,55 @@ static CGFloat const sheetViewHeight = 216;
 /**遮罩*/
 @property (nonatomic, strong) UIButton *coverView;
 /** 中间 底部弹出视图 */
-@property (nonatomic, strong) UIView *sheetView;
+@property (nonatomic, strong) UIImageView *sheetView;
+/**弹框视图背景颜色*/
+@property (nonatomic, strong) UIColor *sheetViewBackgroundColor;
+/**弹框视图背景图片*/
+@property (nonatomic, strong) UIImage *sheetViewBackgroundImage;
 /**遮罩透明度*/
 @property (nonatomic, assign) CGFloat coverViewAlpha;
+/** 取消按钮 */
+@property (nonatomic, strong) UIButton *cancelButton;
 
-#pragma mark - date picker
+#pragma mark - 工具栏
+/**工具栏容器*/
+@property (nonatomic, strong) UIImageView *toolbarContainerView;
+/**工具栏容器背景视图*/
+@property (nonatomic, strong) UIColor *toolbarContainerViewBackgroundColor;
+/** 工具栏容器背景图片 */
+@property (nonatomic, strong) UIImage *toolbarContainerViewBackgroundImage;
+/**工具栏*/
+@property (nonatomic, strong) TranslucentToolbar *pickerToolbar;
+/**确定按钮*/
+@property (nonatomic, strong) UIButton *confirmButton;
+/**确定按钮title*/
+@property (nonatomic, copy) NSString *confirmButtonTitle;
+/**确定按钮titleColor*/
+@property (nonatomic, strong) UIColor *confirmButtonTitleColor;
+/**占空符*/
+@property (nonatomic, strong) UIBarButtonItem *flexibleSpaceBar;
+/**是否有输入框*/
+@property (nonatomic, assign) BOOL hasInput;
+/**输入框左侧视图*/
+@property (nonatomic, strong) UIView *inputLeftView;
+/**文本输入框*/
+@property (nonatomic, strong) MyTextField *inputTextField;
+/**输入框占位*/
+@property (nonatomic, copy) NSString *placehodler;
+/**输入内容*/
+@property (nonatomic, copy) NSString *oldInputString;
+/**键盘管理*/
+@property (nonatomic, strong) KeyboardManager *keyboard;
+/**输入内容*/
+@property (nonatomic, strong) NSString *inputString;
+
+#pragma mark - 日期选择器
+/**日期选择器容器*/
+@property (nonatomic, strong) UIImageView *datePickerContainerView;
+/**日期选择器背景颜色*/
+@property (nonatomic, strong) UIColor *datePickerBackgroundColor;
+/**日期选择器背景图片*/
+@property (nonatomic, strong) UIImage *datePickerBackgroundImage;
 /**日期字符串*/
 @property (nonatomic, strong) NSString *dateTimeStr;
 /**年份滚动视图*/
@@ -674,27 +754,18 @@ static CGFloat const sheetViewHeight = 216;
 @property (nonatomic, assign) NSInteger curSecond;
 /**默认日期*/
 @property (nonatomic, strong) NSDate *defaultDate;
-/**日期选择器容器*/
-@property (nonatomic, strong) UIView *datePickerContainerView;
-/**日期分割*/
-@property (nonatomic, strong) UILabel *dateSepratorLabel;
 
 
-/**文本输入框*/
-@property (nonatomic, strong) MyTextField *inputTextField;
-/**是否有输入框*/
-@property (nonatomic, assign) BOOL hasInput;
-/**输入内容*/
-@property (nonatomic, strong) NSString *inputString;
-/**键盘管理*/
-@property (nonatomic, strong) KeyboardManager *keyboard;
+
+
+
+
+
 
 /** 其他按钮表格 */
 @property (nonatomic, strong) UITableView *tableView;
-/**确定按钮*/
-@property (nonatomic, strong) UIButton *confirmButton;
-/** 取消按钮 */
-@property (nonatomic, strong) UIButton *cancelButton;
+
+
 /**配置项*/
 @property (nonatomic, strong) NSDictionary *options;
 /**选择项*/
@@ -717,10 +788,8 @@ static CGFloat const sheetViewHeight = 216;
 @property (nonatomic, copy) NSString *message;
 /**提示内容Label*/
 @property (nonatomic, strong) UILabel *messageLabel;
-/**工具栏容器*/
-@property (nonatomic, strong) UIView *toolbarContainerView;
-/**工具栏*/
-@property (nonatomic, strong) UIToolbar *pickerToolbar;
+
+
 /**转换*/
 @property (nonatomic, copy) NSString *(^objectToStringConverter)(id object);
 /**选择器*/
@@ -735,8 +804,6 @@ static CGFloat const sheetViewHeight = 216;
 @property (nonatomic, strong) UIColor *pickerViewTextColor;
 /**总视图背景颜色*/
 @property (nonatomic, strong) UIColor *pickerViewBackgroundColor;
-/**sheet背景颜色*/
-@property (nonatomic, strong) UIColor *sheetViewBackgroundColor;
 /**显示字体*/
 @property (nonatomic, strong) UIFont *pickerViewFont;
 /**选中对象*/
@@ -792,12 +859,25 @@ static CGFloat const sheetViewHeight = 216;
     _keyboard = nil;
 }
 
++ (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options realTimeResult:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))completionHandler{
+    
+}
+
 + (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type title:(NSString *)title withObject:(id)objects withOptions:(NSDictionary *)options hasInput:(BOOL)hasInput hasNav:(BOOL)hasNav objectToStringConverter:(NSString *(^)(id))converter completion:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))completionBlock confirmHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))confirmBlock{
     UIView *sheet = [[self alloc] initWithFrame:view.bounds superView:view  pickerType:type title: title withObject:objects withOptions:options hasInput:hasInput hasNav: hasNav objectToStringConverter:converter resultBlock:completionBlock confirmHandler:confirmBlock];
     if (view == nil) {
         return;
     }
     [view addSubview:sheet];
+}
+
+- (instancetype)initWithFrame:(CGRect)frame superView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options realTimeResult:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))completionHandler
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        
+    }
+    return self;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame superView:(UIView *)view  pickerType:(ZNKPickerType)type title:(NSString *)title  withObject:(id)objects withOptions:(NSDictionary *)options hasInput:(BOOL)has hasNav:(BOOL)hasNav  objectToStringConverter:(NSString *(^)(id))converter resultBlock:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))block confirmHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))confirmBlock
@@ -891,17 +971,17 @@ static CGFloat const sheetViewHeight = 216;
     [self.sheetView addSubview:self.toolbarContainerView];
     [self.sheetView addSubview:self.cancelButton];
     
-    self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, sheetViewHeight);
-    self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), pickerViewToolbarHeight);
+    self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, [self defaultSheetViewHeight]);
+    self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
     [self.toolbarContainerView addSubview:self.pickerToolbar];
     
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
     _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + 1;
-    _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - margin_cancelButton_to_otherButton;
+    _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
     
     [self.sheetView addSubview:self.pickerView];
     
-    [UIView animateWithDuration:SheetViewAnimationDuration animations:^{
+    [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
     }];
     
@@ -919,15 +999,15 @@ static CGFloat const sheetViewHeight = 216;
     [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
     _dateTimeStr = [dateFormatter stringFromDate:self.defaultDate];
     
-    self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, sheetViewHeight);
-    self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), pickerViewToolbarHeight);
+    self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, [self defaultSheetViewHeight]);
+    self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
+    
      [self.toolbarContainerView addSubview:self.pickerToolbar];
-    
-    
     self.pickerToolbar.frame = CGRectMake(10, 0, CGRectGetWidth(self.sheetView.frame) - 20, CGRectGetHeight(self.toolbarContainerView.frame));
+    
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
-    _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + 1;
-    _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - margin_cancelButton_to_otherButton;
+    _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
+    _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
     
     [self.sheetView addSubview:self.datePickerContainerView];
     self.datePickerContainerView.frame = CGRectMake(0, _pickerViewMinY, CGRectGetWidth(self.sheetView.frame), _pickerViewHeight);
@@ -971,11 +1051,11 @@ static CGFloat const sheetViewHeight = 216;
         [self set_minuteScrollView];
     }
     
-    [self.datePickerContainerView addSubview:self.dateSepratorLabel];
-    CGFloat labelHeight = CGRectGetHeight(self.datePickerContainerView.frame) * (1 / 5.0);
-    self.dateSepratorLabel.frame = CGRectMake(0, (CGRectGetHeight(self.datePickerContainerView.frame) - labelHeight) / 2, CGRectGetWidth(self.datePickerContainerView.frame), labelHeight);
+//    [self.datePickerContainerView addSubview:self.dateSepratorLabel];
+//    CGFloat labelHeight = CGRectGetHeight(self.datePickerContainerView.frame) * (1 / 5.0);
+//    self.dateSepratorLabel.frame = CGRectMake(0, (CGRectGetHeight(self.datePickerContainerView.frame) - labelHeight) / 2, CGRectGetWidth(self.datePickerContainerView.frame), labelHeight);
 
-    [UIView animateWithDuration:SheetViewAnimationDuration animations:^{
+    [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
     }];
 }
@@ -1018,12 +1098,12 @@ static CGFloat const sheetViewHeight = 216;
     
     
     _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + 1;
-    _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - margin_cancelButton_to_otherButton;
+    _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultSheetViewAnimationDuration];
     
     [self.sheetView addSubview:self.tableView];
     self.tableView.frame = CGRectMake(0, _pickerViewMinY, CGRectGetWidth(self.sheetView.frame), _pickerViewHeight);
     
-    [UIView animateWithDuration:SheetViewAnimationDuration animations:^{
+    [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
     }];
     
@@ -1041,16 +1121,267 @@ static CGFloat const sheetViewHeight = 216;
 
 #pragma mark - getter
 
-- (void)setCanScroll:(BOOL)canScroll{
-    _canScroll = canScroll;
+#pragma mark - 遮罩视图
+
+- (UIButton *)coverView{
+    if (!_coverView) {
+        _coverView = [UIButton buttonWithType:UIButtonTypeCustom];
+        _coverView.frame = _mainView.bounds;
+        _coverView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:self.coverViewAlpha];
+        [_coverView addTarget:self action:@selector(dismissView) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _coverView;
 }
 
+#pragma mark - 遮罩视图透明度
+
 - (CGFloat)coverViewAlpha{
-    if ([_options[ZNKcoverViewAlpha] isKindOfClass:[NSNumber class]]) {
+    if (_options[ZNKcoverViewAlpha] != nil && [_options[ZNKcoverViewAlpha] isKindOfClass:[NSNumber class]]) {
         return ((NSNumber *)_options[ZNKcoverViewAlpha]).floatValue;
     }
     return 0.3;
 }
+
+#pragma mark - 弹框视图
+
+- (UIView *)sheetView{
+    if (!_sheetView) {
+        _sheetView = [[UIImageView alloc] initWithFrame:CGRectZero];
+        _sheetView.userInteractionEnabled = YES;
+        _sheetView.backgroundColor = self.sheetViewBackgroundColor;
+    }
+    return _sheetView;
+}
+
+- (CGFloat)defaultToolbarPickerMargin{
+    return 1.0f;
+}
+
+- (CGFloat)defaultPickerAndCancelButton{
+    return 5.0f;
+}
+
+- (CGFloat)defaultSheetViewHeight{
+    return 216.0f;
+}
+
+- (CGFloat)defaultSheetViewAnimationDuration{
+    return 0.25f;
+}
+
+- (CGFloat)defaultToolbarHeight{
+    return 44.0f;
+}
+
+#pragma mark - 弹框视图背景颜色
+
+- (UIColor *)sheetViewBackgroundColor{
+    if (_options[ZNKsheetViewViewBackgroundColor] != nil && [_options[ZNKsheetViewViewBackgroundColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKsheetViewViewBackgroundColor];
+    }
+    return [UIColor colorFromHexString:@"#ECE3E6"];
+}
+
+#pragma mark - 弹框视图背景图片
+
+- (UIImage *)sheetViewBackgroundImage{
+    if (_options[ZNKSheetViewBackgroundImage] != nil && [_options[ZNKSheetViewBackgroundImage] isKindOfClass:[UIImage class]]) {
+        return (UIImage *)_options[ZNKSheetViewBackgroundImage];
+    }
+    return [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
+}
+
+#pragma mark - tool bar / title message 
+
+#pragma mark - 工具栏容器视图
+
+- (UIView *)toolbarContainerView{
+    if (!_toolbarContainerView) {
+        _toolbarContainerView = [[UIImageView alloc] init];
+        _toolbarContainerView.userInteractionEnabled = YES;
+        _toolbarContainerView.backgroundColor = [UIColor whiteColor];
+    }
+    return _toolbarContainerView;
+}
+
+#pragma mark - 工具栏容器视图背景颜色
+
+- (UIColor *)toolbarContainerViewBackgroundColor{
+    if (_options[ZNKToolbarBackgroundColor] != nil && [_options[ZNKToolbarBackgroundColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKToolbarBackgroundColor];
+    }
+    return [UIColor whiteColor];
+}
+
+#pragma mark - 工具栏容器视图背景图片
+
+- (UIImage *)toolbarContainerViewBackgroundImage{
+    if (_options[ZNKToolbarBackgroundImage] != nil && [_options[ZNKToolbarBackgroundImage] isKindOfClass:[UIImage class]]) {
+        return (UIImage *)_options[ZNKToolbarBackgroundImage];
+    }
+    return [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
+}
+
+#pragma mark - 工具栏确定按钮
+
+- (UIButton *)confirmButton{
+    if (!_confirmButton) {
+        _confirmButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        _confirmButton.titleLabel.font = [UIFont systemFontOfSize:14];
+        [_confirmButton addTarget:self action:@selector(buttonClick:) forControlEvents:UIControlEventTouchUpInside];
+        [_confirmButton setTitle:self.confirmButtonTitle forState:UIControlStateNormal];
+        [_confirmButton setTitleColor:self.confirmButtonTitleColor forState:UIControlStateNormal];
+    }
+    return _confirmButton;
+}
+
+#pragma mark - 工具栏确定按钮title
+
+- (NSString *)confirmButtonTitle{
+    if (_options[ZNKConfirmButtonTitle] && [_options[ZNKConfirmButtonTitle] isKindOfClass:[NSString class]]) {
+        return (NSString *)_options[ZNKConfirmButtonTitle];
+    }
+    return @"确定";
+}
+
+#pragma mark - 工具栏确定按钮titleColor
+
+- (UIColor *)confirmButtonTitleColor{
+    if (_options[ZNKConfirmButtonTitleColor] && [_options[ZNKConfirmButtonTitleColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKConfirmButtonTitleColor];
+    }
+    return [UIColor colorFromHexString:@"#E0748E"];
+}
+
+#pragma mark - 工具栏占空符
+
+- (UIBarButtonItem *)flexibleSpaceBar{
+    return [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+}
+
+#pragma mark - 是否有输入框
+
+- (BOOL)hasInput{
+    if (_options[ZNKToolbarHasInput] && [_options[ZNKToolbarHasInput] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKToolbarHasInput]).boolValue;
+    }
+    return NO;
+}
+
+#pragma mark - 输入框
+
+- (MyTextField *)inputTextField{
+    if (!_inputTextField) {
+        _inputTextField = [[MyTextField alloc] initWithFrame:CGRectZero padding:40];
+        _inputTextField.leftView = self.inputLeftView;
+        _inputTextField.leftViewMode = UITextFieldViewModeAlways;
+        _inputTextField.delegate = self;
+        _inputTextField.placeholder = self.placehodler;
+//        _inputTextField.text = _inputString;
+    }
+    return _inputTextField;
+}
+
+#pragma mark - 输入框左侧视图
+
+- (UIView *)inputLeftView{
+    if (_options[ZNKToolbarInputLeftView] && [_options[ZNKToolbarInputLeftView] isKindOfClass:[UIView class]]) {
+        return (UIView *)_options[ZNKToolbarInputLeftView];
+    }
+    if (!_inputLeftView) {
+        UILabel *leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 40, CGRectGetHeight(self.inputTextField.frame))];
+        leftLabel.text = @"备注:";
+        leftLabel.font = [UIFont systemFontOfSize:15];
+        leftLabel.textAlignment = NSTextAlignmentCenter;
+        leftLabel.adjustsFontSizeToFitWidth = YES;
+        _inputLeftView = leftLabel;
+    }
+    return _inputLeftView;
+}
+
+#pragma mark - 占位
+
+- (NSString *)placehodler{
+    if (_options[ZNKToolbarInputPlachodler] && [_options[ZNKToolbarInputPlachodler] isKindOfClass:[NSString class]]) {
+        return (NSString *)_options[ZNKToolbarInputPlachodler];
+    }
+    return @"请输入...";
+}
+
+#pragma mark - 旧内容
+
+- (NSString *)oldInputString{
+    return self.placehodler;
+}
+
+#pragma mark - 工具栏
+
+- (TranslucentToolbar *)pickerToolbar{
+    if (!_pickerToolbar) {
+        _pickerToolbar = [[TranslucentToolbar alloc] initWithFrame:CGRectMake(10, 0, CGRectGetWidth(self.sheetView.frame) - 20, CGRectGetHeight(self.toolbarContainerView.frame))];
+        if (self.hasInput) {
+            self.inputTextField.frame = CGRectMake(0, 0, CGRectGetWidth(_pickerToolbar.frame) * (4 / 5.0), CGRectGetHeight(_pickerToolbar.frame));
+            
+            UIBarButtonItem *inputBar = [[UIBarButtonItem alloc] initWithCustomView:self.inputTextField];
+            self.confirmButton.frame = CGRectMake(0, 0, 40, CGRectGetHeight(_pickerToolbar.frame));
+            UIBarButtonItem *confirmButton = [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
+            _pickerToolbar.items = @[inputBar, self.flexibleSpaceBar, confirmButton];
+        }else{
+            self.confirmButton.frame = CGRectMake(0, 0, 40, CGRectGetHeight(_pickerToolbar.frame));
+            UIBarButtonItem *confirmButton = [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
+            _pickerToolbar.items = @[self.flexibleSpaceBar, confirmButton];
+        }
+    }
+    return _pickerToolbar;
+}
+
+#pragma mark - Private
+
+#pragma mark - 日期选择器
+
+- (UIImageView *)datePickerContainerView{
+    if (!_datePickerContainerView) {
+        _datePickerContainerView = [[UIImageView alloc] init];
+        _datePickerContainerView.userInteractionEnabled = YES;
+        _datePickerContainerView.backgroundColor = self.datePickerBackgroundColor;
+        _datePickerContainerView.image = self.datePickerBackgroundImage;
+    }
+    return _datePickerContainerView;
+}
+
+#pragma mark - 日期选择器背景颜色
+
+- (UIColor *)datePickerBackgroundColor{
+    if (_options[ZNKDatePickerBackgroundColor] && [_options[ZNKDatePickerBackgroundColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKDatePickerBackgroundColor];
+    }
+    return [UIColor whiteColor];
+}
+
+#pragma mark - 日期选择器背景图片
+
+- (UIImage *)datePickerBackgroundImage{
+    if (_options[ZNKDatePickerBackgroundImage] && [_options[ZNKDatePickerBackgroundImage] isKindOfClass:[UIImage class]]) {
+        return (UIImage *)_options[ZNKDatePickerBackgroundImage];
+    }
+    if (!_datePickerBackgroundImage) {
+        _datePickerBackgroundImage = [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
+    }
+    return _datePickerBackgroundImage;
+}
+
+- (NSDate *)defaultDate{
+    if (_options[ZNKDatePickerDefaultDate] && [_options[ZNKDatePickerDefaultDate] isKindOfClass:[NSDate class]]) {
+        return _options[ZNKDatePickerDefaultDate];
+    }
+    return [NSDate date];
+}
+
+- (void)setCanScroll:(BOOL)canScroll{
+    _canScroll = canScroll;
+}
+
+
 
 - (CGFloat)tableViewRowHeight{
     if ([_options[ZNKdefaultTableRowHeight] isKindOfClass:[NSNumber class]]) {
@@ -1071,21 +1402,9 @@ static CGFloat const sheetViewHeight = 216;
     return _tableView;
 }
 
-- (NSDate *)defaultDate{
-    if ([_options[ZNKdefaultDate] isKindOfClass:[NSDate class]]) {
-        return _options[ZNKdefaultDate];
-    }
-    return [NSDate date];
-}
 
-- (MyTextField *)inputTextField{
-    if (!_inputTextField) {
-        _inputTextField = [[MyTextField alloc] initWithFrame:CGRectZero padding:40];
-        _inputTextField.delegate = self;
-        _inputTextField.text = _inputString;
-    }
-    return _inputTextField;
-}
+
+
 
 - (BOOL)pickerViewShowsSelectionIndicator{
     id showSelectionIndicator = _options[ZNKshowsSelectionIndicator];
@@ -1145,13 +1464,7 @@ static CGFloat const sheetViewHeight = 216;
     return [UIColor whiteColor];
 }
 
-- (UIColor *)sheetViewBackgroundColor{
-    UIColor *pickerViewBackgroundColor = _options[ZNKsheetViewViewBackgroundColor];
-    if (pickerViewBackgroundColor != nil) {
-        return pickerViewBackgroundColor;
-    }
-    return [UIColor colorFromHexString:@"#ECE3E6"];
-}
+
 
 - (NSString *)cancelButtonTitle{
     NSString *cancelTitle = _options[ZNKpickerViewCancelTitle];
@@ -1163,15 +1476,7 @@ static CGFloat const sheetViewHeight = 216;
 
 
 
-- (UIButton *)coverView{
-    if (!_coverView) {
-        _coverView = [UIButton buttonWithType:UIButtonTypeCustom];
-        _coverView.frame = _mainView.bounds;
-        _coverView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:self.coverViewAlpha];
-        [_coverView addTarget:self action:@selector(dismissView) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _coverView;
-}
+
 
 - (UIButton *)cancelButton{
     if (!_cancelButton) {
@@ -1184,96 +1489,25 @@ static CGFloat const sheetViewHeight = 216;
     return _cancelButton;
 }
 
-- (UIView *)sheetView{
-    if (!_sheetView) {
-        _sheetView = [[UIView alloc] initWithFrame:CGRectZero];
-        _sheetView.backgroundColor = self.sheetViewBackgroundColor;
-    }
-    return _sheetView;
-}
 
-- (UIView *)datePickerContainerView{
-    if (!_datePickerContainerView) {
-        _datePickerContainerView = [[UIView alloc] initWithFrame:CGRectZero];
-        _datePickerContainerView.backgroundColor = self.pickerViewBackgroundColor;
-    }
-    return _datePickerContainerView;
-}
 
-- (UILabel *)dateSepratorLabel{
-    if (!_dateSepratorLabel) {
-        _dateSepratorLabel = [[UILabel alloc] init];
-        _dateSepratorLabel.text = @":";
-        _dateSepratorLabel.font = [UIFont systemFontOfSize:20];
-        _dateSepratorLabel.textColor = self.pickerViewTextColor;
-        if (_textColor) {
-            _dateSepratorLabel.textColor = _textColor;
-        }else{
-            _dateSepratorLabel.textColor = [UIColor colorFromHexString:@"#B95561"];
-        }
-        _dateSepratorLabel.textAlignment = NSTextAlignmentCenter;
-        _dateSepratorLabel.backgroundColor = [UIColor clearColor];
-    }
-    return _dateSepratorLabel;
-}
+//- (UILabel *)dateSepratorLabel{
+//    if (!_dateSepratorLabel) {
+//        _dateSepratorLabel = [[UILabel alloc] init];
+//        _dateSepratorLabel.text = @":";
+//        _dateSepratorLabel.font = [UIFont systemFontOfSize:20];
+//        _dateSepratorLabel.textColor = self.pickerViewTextColor;
+//        if (_textColor) {
+//            _dateSepratorLabel.textColor = _textColor;
+//        }else{
+//            _dateSepratorLabel.textColor = [UIColor colorFromHexString:@"#B95561"];
+//        }
+//        _dateSepratorLabel.textAlignment = NSTextAlignmentCenter;
+//        _dateSepratorLabel.backgroundColor = [UIColor clearColor];
+//    }
+//    return _dateSepratorLabel;
+//}
 
-- (UIView *)toolbarContainerView{
-    if (!_toolbarContainerView) {
-        _toolbarContainerView = [[UIView alloc] init];
-        _toolbarContainerView.backgroundColor = [UIColor whiteColor];
-    }
-    return _toolbarContainerView;
-}
-
-- (UIButton *)confirmButton{
-    if (!_confirmButton) {
-        _confirmButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        _confirmButton.titleLabel.font = [UIFont systemFontOfSize:14];
-        [_confirmButton addTarget:self action:@selector(buttonClick:) forControlEvents:UIControlEventTouchUpInside];
-        [_confirmButton setTitle:(NSString *)_options[ZNKconfirmButtonTitle] == nil ? @"确定" : (NSString *)_options[ZNKconfirmButtonTitle] forState:UIControlStateNormal];
-        
-        if ([_options[ZNKcomfirmButtonColor] isKindOfClass:[UIColor class]]) {
-            [_confirmButton setTitleColor:_options[ZNKcomfirmButtonColor] forState:UIControlStateNormal];
-        }else{
-            [_confirmButton setTitleColor:[UIColor colorFromHexString:@"#E0748E"] forState:UIControlStateNormal];
-        }
-    }
-    return _confirmButton;
-}
-
-- (UIToolbar *)pickerToolbar{
-    if (!_pickerToolbar) {
-        _pickerToolbar = [[UIToolbar alloc] initWithFrame:CGRectMake(10, 0, CGRectGetWidth(self.sheetView.frame) - 20, CGRectGetHeight(self.toolbarContainerView.frame))];
-        _pickerToolbar.barTintColor = self.pickerViewBackgroundColor;
-        if (_hasInput) {
-            self.inputTextField.frame = CGRectMake(0, 0, CGRectGetWidth(_pickerToolbar.frame) * (4 / 5.0), CGRectGetHeight(_pickerToolbar.frame));
-            UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 40, CGRectGetHeight(self.inputTextField.frame))];
-            titleLabel.text = _options[ZNKleftInputViewTitle] == nil ? @"备注:": _options[ZNKleftInputViewTitle];
-            titleLabel.textAlignment = NSTextAlignmentCenter;
-            titleLabel.textColor = [UIColor darkGrayColor];
-            titleLabel.font = [UIFont systemFontOfSize:14];
-            self.inputTextField.leftViewMode = UITextFieldViewModeAlways;
-            self.inputTextField.leftView = titleLabel;
-            
-            UIBarButtonItem *inputBar = [[UIBarButtonItem alloc] initWithCustomView:self.inputTextField];
-            UIBarButtonItem *flexButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-            self.confirmButton.frame = CGRectMake(0, 0, 40, CGRectGetHeight(_pickerToolbar.frame));
-            UIBarButtonItem *confirmButton = [[UIBarButtonItem alloc] initWithCustomView:self.confirmButton];
-            _pickerToolbar.items = @[inputBar, flexButton, confirmButton];
-        }else{
-            UIBarButtonItem *flexButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-            UIBarButtonItem *confirmButton = [[UIBarButtonItem alloc] initWithTitle:(NSString *)_options[ZNKconfirmButtonTitle] == nil ? @"确定" : (NSString *)_options[ZNKconfirmButtonTitle] style:UIBarButtonItemStylePlain target:self action:@selector(buttonClick:)];
-            if ([_options[ZNKcomfirmButtonColor] isKindOfClass:[UIColor class]]) {
-                [confirmButton setTitleTextAttributes:@{NSForegroundColorAttributeName:_options[ZNKcomfirmButtonColor]} forState:UIControlStateNormal];
-            }else{
-                [confirmButton setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor colorFromHexString:@"#E0748E"]} forState:UIControlStateNormal];
-            }
-            _pickerToolbar.items = @[flexButton, confirmButton];
-        }
-        
-    }
-    return _pickerToolbar;
-}
 
 - (UIPickerView *)pickerView{
     if (!_pickerView) {
@@ -1425,7 +1659,7 @@ static CGFloat const sheetViewHeight = 216;
 
 /** 点击按钮以及遮盖部分执行的方法 */
 - (void)dismissView {
-    [UIView animateWithDuration:SheetViewAnimationDuration animations:^{
+    [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformIdentity;
     } completion:^(BOOL finished) {
         [self removeFromSuperview];
