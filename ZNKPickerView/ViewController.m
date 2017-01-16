@@ -41,9 +41,13 @@
     [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeDateTimeMode options:option objectToStringConverter:^NSString *(id obj) {
         return [obj description];
     } realTimeResult:^(ZNKPickerView *pickerView) {
-        
+        NSLog(@"realTimeResult picker view index %ld",(long)pickerView.index);
+        NSLog(@"realTimeResult picker view input %@", pickerView.inputResult);
+        NSLog(@"realTimeResult picker view select result %@",pickerView.result);
     } completionHandler:^(ZNKPickerView *pickerView) {
-        
+        NSLog(@"completionHandler picker view index %ld",(long)pickerView.index);
+        NSLog(@"completionHandler picker view input %@", pickerView.inputResult);
+        NSLog(@"completionHandler picker view select result %@",pickerView.result);
     }];
 }
 

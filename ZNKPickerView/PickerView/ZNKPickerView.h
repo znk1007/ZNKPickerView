@@ -52,11 +52,11 @@ typedef enum : NSUInteger {
 
 @interface ZNKPickerView : UIView
 /**输入文本*/
-@property (nonatomic, readonly) NSString *inputString;
+@property (nonatomic, readonly) NSString *inputResult;
 /**选择结果*/
 @property (nonatomic, readonly) id result;
 /**选中的下标*/
-@property (nonatomic, readonly) NSInteger selectedIndex;
+@property (nonatomic, readonly) NSInteger index;
 
 + (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options objectToStringConverter:(NSString *(^)(id))converter  realTimeResult:(void(^)(ZNKPickerView *pickerView))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView))completionHandler;
 

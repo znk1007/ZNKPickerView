@@ -1496,6 +1496,30 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     return [NSDate date];
 }
 
+
+
+#pragma mark - setting
+
+#pragma mark - 选择日期
+
+- (void)setDateTimeStr:(NSString *)dateTimeStr{
+    _dateTimeStr = dateTimeStr;
+    if (_ZNKPickerRealTimeResult) {
+        _result = _dateTimeStr;
+        _index = -1;
+        _ZNKPickerRealTimeResult(self);
+    }
+}
+
+- (void)setInputString:(NSString *)inputString{
+    _inputString = inputString;
+    if (_ZNKPickerRealTimeResult) {
+        _index = -1;
+        _inputResult = _inputString;
+        _ZNKPickerRealTimeResult(self);
+    }
+}
+
 - (void)setCanScroll:(BOOL)canScroll{
     _canScroll = canScroll;
 }
@@ -2359,6 +2383,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
     NSString *selectTimeString = [NSString stringWithFormat:@"%ld-%02ld-%02ld %02ld:%02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin,(long)self.curSecond];
+    self.dateTimeStr = selectTimeString;
     NSDate *selectDate = [dateFormatter dateFromString:selectTimeString];
     NSDate *nowDate = self.defaultDate;
     NSString *nowString = [dateFormatter stringFromDate:nowDate];
