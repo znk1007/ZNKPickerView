@@ -29,11 +29,20 @@
 }
 
 - (void)testPickerView{
-    [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeDateMode title:@"这是测试" withObject:@[@"从相册选择",@"拍照"] withOptions:nil hasInput:NO hasNav:NO objectToStringConverter:^NSString *(id obj) {
+//    [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeDateTimeMode title:@"这是测试" withObject:@[@"从相册选择",@"拍照"] withOptions:nil hasInput:NO hasNav:NO objectToStringConverter:^NSString *(id obj) {
+//        return [obj description];
+//    } completion:^(ZNKPickerView *pickerView, NSString *input, NSInteger index, id obj) {
+//        
+//    } confirmHandler:^(ZNKPickerView *pickerView, NSString *input, NSInteger index, id obj) {
+//        
+//    }];
+    
+    NSDictionary *option = @{};
+    [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeDateTimeMode options:option objectToStringConverter:^NSString *(id obj) {
         return [obj description];
-    } completion:^(ZNKPickerView *pickerView, NSString *input, NSInteger index, id obj) {
+    } realTimeResult:^(ZNKPickerView *pickerView) {
         
-    } confirmHandler:^(ZNKPickerView *pickerView, NSString *input, NSInteger index, id obj) {
+    } completionHandler:^(ZNKPickerView *pickerView) {
         
     }];
 }

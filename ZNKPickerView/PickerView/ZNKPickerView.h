@@ -26,7 +26,7 @@ extern NSString * const ZNKsuviewsbackgroundColor;
 extern NSString * const ZNKtoolbarColor;
 extern NSString * const ZNKcomfirmButtonColor;
 extern NSString * const ZNKConfirmButtonTitle;
-extern NSString * const ZNKselectedObject;
+extern NSString * const ZNKDefaultSelectedObject;
 extern NSString * const ZNKtextAlignment;
 extern NSString * const ZNKshowsSelectionIndicator;
 extern NSString * const ZNKpickerViewTitleColor;
@@ -51,8 +51,6 @@ typedef enum : NSUInteger {
 
 
 @interface ZNKPickerView : UIView
-/**可以滚动 type = ZNKPickerTypeActionSheet | type = ZNKPickerTypeActionAlert*/
-@property (nonatomic, assign) BOOL canScroll;
 /**输入文本*/
 @property (nonatomic, readonly) NSString *inputString;
 /**选择结果*/
@@ -60,7 +58,7 @@ typedef enum : NSUInteger {
 /**选中的下标*/
 @property (nonatomic, readonly) NSInteger selectedIndex;
 
-
++ (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options objectToStringConverter:(NSString *(^)(id))converter  realTimeResult:(void(^)(ZNKPickerView *pickerView))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView))completionHandler;
 
 + (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type title:(NSString *)title withObject:(id)objects withOptions:(NSDictionary *)options hasInput:(BOOL)hasInput hasNav:(BOOL)hasNav objectToStringConverter:(NSString *(^)(id))converter completion:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))completionBlock confirmHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))confirmBlock;
 

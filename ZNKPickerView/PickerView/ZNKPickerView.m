@@ -633,6 +633,9 @@
 NSString * const ZNKCoverViewAlpha = @"ZNKCoverViewAlpha";
 NSString * const ZNKSheetViewBackgroundColor = @"ZNKSheetViewBackgroundColor";
 NSString * const ZNKSheetViewBackgroundImage = @"ZNKSheetViewBackgroundImage";
+NSString * const ZNKPickerViewData = @"ZNKPickerViewData";
+NSString * const ZNKDefaultSelectedObject = @"selectedObject";
+NSString * const ZNKDefaultHasNavigationBar = @"ZNKDefaultHasNavigationBar";
 
 NSString * const ZNKToolbarBackgroundColor = @"ZNKToolbarBackgroundColor";
 NSString * const ZNKToolbarHasInput = @"ZNKToolbarHasInput";
@@ -650,7 +653,7 @@ NSString * const ZNKDatePickerDefaultDate = @"ZNKDatePickerDefaultDate";
 NSString * const ZNKsuviewsbackgroundColor = @"ZNKsuviewsbackgroundColor";
 NSString * const ZNKtoolbarColor = @"ZNKtoolbarColor";
 NSString * const ZNKcomfirmButtonColor = @"ZNKcomfirmButtonColor";
-NSString * const ZNKselectedObject = @"selectedObject";
+
 NSString * const ZNKtextAlignment = @"textAlignment";
 NSString * const ZNKshowsSelectionIndicator = @"showsSelectionIndicator";
 NSString * const ZNKpickerViewTitleColor = @"ZNKpickerViewTitleColor";
@@ -669,7 +672,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 
 @interface ZNKPickerView ()<UIPickerViewDelegate, UIPickerViewDataSource,ZNKCycleScrollViewDatasource,ZNKCycleScrollViewDelegate, UITextFieldDelegate, UITableViewDelegate,UITableViewDataSource>
 
-#pragma mark - 基本属性
+#pragma mark - 基本UI属性
 /** 选择器类型*/
 @property (nonatomic, assign) ZNKPickerType type;
 /**主视图*/
@@ -686,6 +689,24 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 @property (nonatomic, assign) CGFloat coverViewAlpha;
 /** 取消按钮 */
 @property (nonatomic, strong) UIButton *cancelButton;
+
+#pragma mark - 基本数据属性
+/**配置项*/
+@property (nonatomic, strong) NSDictionary *options;
+/**选择项*/
+@property (nonatomic, strong) NSArray *pickerViewArray;
+/**选择字典*/
+@property (nonatomic, strong) NSDictionary *pickerViewDict;
+/**接收传入数据*/
+@property (nonatomic, strong) id receiveObject;
+/**转换*/
+@property (nonatomic, copy) NSString *(^objectToStringConverter)(id object);
+/**
+ 数组或字典
+ 数组 1  字典 2 字符串 3
+ */
+@property (nonatomic, assign) NSInteger pickerClass;
+
 
 #pragma mark - 工具栏
 /**工具栏容器*/
@@ -718,6 +739,8 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 @property (nonatomic, strong) KeyboardManager *keyboard;
 /**输入内容*/
 @property (nonatomic, strong) NSString *inputString;
+/**是否有导航栏*/
+@property (nonatomic, assign) BOOL hasNav;
 
 #pragma mark - 日期选择器
 /**日期选择器容器*/
@@ -757,7 +780,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 
 
 
-
+@property (nonatomic, assign) BOOL canScroll;
 
 
 
@@ -766,19 +789,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 @property (nonatomic, strong) UITableView *tableView;
 
 
-/**配置项*/
-@property (nonatomic, strong) NSDictionary *options;
-/**选择项*/
-@property (nonatomic, strong) NSArray *pickerViewArray;
-/**选择键*/
-@property (nonatomic, strong) NSArray *pickerViewKeys;
-/**选择字典*/
-@property (nonatomic, strong) NSDictionary *pickerViewDict;
-/**
- 数组或字典
- 数组 1  字典 2
- */
-@property (nonatomic, assign) NSInteger pickerClass;
+
 
 /**提示title*/
 @property (nonatomic, copy) NSString *title;
@@ -790,8 +801,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 @property (nonatomic, strong) UILabel *messageLabel;
 
 
-/**转换*/
-@property (nonatomic, copy) NSString *(^objectToStringConverter)(id object);
+
 /**选择器*/
 @property (nonatomic, strong) UIPickerView *pickerView;
 /**选择器高度*/
@@ -839,6 +849,10 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 @property (nonatomic, copy) void(^ZNKPickertViewResult)(ZNKPickerView *pickerView,NSString *input, NSInteger index, NSObject *obj);
 /**点击确定时候的回调*/
 @property (nonatomic, copy) void(^ZNKPickertViewConfirmResult)(ZNKPickerView *pickerView,NSString *input, NSInteger index, NSObject *obj);
+/**实时回调*/
+@property (nonatomic, copy) void(^ZNKPickerRealTimeResult)(ZNKPickerView *pickerView);
+/**确定时候的回调*/
+@property (nonatomic, copy) void(^ZNKPickerConfirmResult)(ZNKPickerView *pickerView);
 
 @end
 
@@ -859,8 +873,12 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     _keyboard = nil;
 }
 
-+ (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options realTimeResult:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))completionHandler{
-    
++ (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options objectToStringConverter:(NSString *(^)(id))converter  realTimeResult:(void(^)(ZNKPickerView *pickerView))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView))completionHandler{
+    if (!view) {
+        return;
+    }
+    UIView *sheet = [[self alloc] initWithFrame:view.bounds superView:view pickerType:type options:options objectToStringConverter:converter realTimeResult:realTimeResult completionHandler:completionHandler];
+    [view addSubview:sheet];
 }
 
 + (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type title:(NSString *)title withObject:(id)objects withOptions:(NSDictionary *)options hasInput:(BOOL)hasInput hasNav:(BOOL)hasNav objectToStringConverter:(NSString *(^)(id))converter completion:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))completionBlock confirmHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))confirmBlock{
@@ -871,11 +889,17 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     [view addSubview:sheet];
 }
 
-- (instancetype)initWithFrame:(CGRect)frame superView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options realTimeResult:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))completionHandler
+- (instancetype)initWithFrame:(CGRect)frame superView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options objectToStringConverter:(NSString *(^)(id))converter  realTimeResult:(void(^)(ZNKPickerView *pickerView))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView))completionHandler
 {
     self = [super initWithFrame:frame];
     if (self) {
-        
+        _mainView = view;
+        _type = type;
+        _ZNKPickerRealTimeResult = realTimeResult;
+        _ZNKPickerConfirmResult = completionHandler;
+        _objectToStringConverter = converter;
+        _options = options;
+        [self baseInitialize];
     }
     return self;
 }
@@ -900,7 +924,6 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
             _pickerClass = 2;
             NSDictionary *objDict = (NSDictionary *)objects;
             _pickerViewDict = objDict;
-            _pickerViewKeys = objDict.allKeys;
             _pickerViewArray = objDict.allValues;
             _result = _pickerViewArray.firstObject;
         }else if ([objects isKindOfClass:[NSString class]]){
@@ -960,6 +983,54 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 
 
 #pragma mark - private
+
+- (void)baseInitialize{
+    switch (_type) {
+        case ZNKPickerTypeObject:
+        {
+            switch (self.pickerClass) {
+                case 1:
+                {
+                    [self initializeForArray];
+                }
+                    break;
+                case 2:
+                {
+                    
+                }
+                default:
+                    break;
+            }
+        }
+            break;
+        case ZNKPickerTypeDateMode:
+        case ZNKPickerTypeTimeMode:
+        case ZNKPickerTypeDateTimeMode:
+        case ZNKPickerTypeYearMonthMode:
+        case ZNKPickerTypeMonthDayMode:
+        case ZNKPickerTypeHourMinuteMode:
+        case ZNKPickerTypeDateHourMinuteMode:
+        {
+            [self initializeForDate];
+        }
+            break;
+        case ZNKPickerTypeActionSheet:
+        {
+            [self initializeForActionSheet];
+        }
+            break;
+        case ZNKPickerTypeActionAlert:
+        {
+            [self initializeForActionAlert];
+        }
+            break;
+        default:
+            break;
+    }
+    if (_hasInput) {
+        self.keyboard = [[KeyboardManager alloc] initWithTargetView:self.inputTextField containerView:self.sheetView hasNav:self.hasNav contentOffset:0 showBlock:nil hideBlock:nil];
+    }
+}
 
 #pragma mark - 单列
 
@@ -1120,6 +1191,52 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 }
 
 #pragma mark - getter
+
+#pragma mark - 接收数据
+
+- (id)receiveObject{
+    return _options[ZNKPickerViewData];
+}
+
+#pragma mark - 接收数组解析
+
+- (NSArray *)pickerViewArray{
+    if (self.receiveObject && [self.receiveObject isKindOfClass:[NSArray class]]) {
+        return (NSArray *)self.receiveObject;
+    }
+    return [NSArray array];
+}
+
+#pragma mark - 接收字典解析
+
+- (NSDictionary *)pickerViewDict{
+    if (self.receiveObject && [self.receiveObject isKindOfClass:[NSDictionary class]]) {
+        return (NSDictionary *)self.receiveObject;
+    }
+    return [NSDictionary dictionary];
+}
+
+#pragma mark - 接收数据类型解析
+
+- (NSInteger)pickerClass{
+    if ([self.receiveObject isKindOfClass:[NSArray class]]) {
+        return 1;
+    }else if ([self.receiveObject isKindOfClass:[NSDictionary class]]) {
+        return 2;
+    }else if ([self.receiveObject isKindOfClass:[NSString class]]) {
+        return 3;
+    }
+    return 3;
+}
+
+#pragma mark - 是否有导航栏
+
+- (BOOL)hasNav{
+    if (_options[ZNKDefaultHasNavigationBar] && [_options[ZNKDefaultHasNavigationBar] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKDefaultHasNavigationBar]).boolValue;
+    }
+    return NO;
+}
 
 #pragma mark - 遮罩视图
 
@@ -1370,6 +1487,8 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     return _datePickerBackgroundImage;
 }
 
+#pragma mark - 日期选择器默认日期
+
 - (NSDate *)defaultDate{
     if (_options[ZNKDatePickerDefaultDate] && [_options[ZNKDatePickerDefaultDate] isKindOfClass:[NSDate class]]) {
         return _options[ZNKDatePickerDefaultDate];
@@ -1404,8 +1523,6 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 
 
 
-
-
 - (BOOL)pickerViewShowsSelectionIndicator{
     id showSelectionIndicator = _options[ZNKshowsSelectionIndicator];
     if (showSelectionIndicator) {
@@ -1426,7 +1543,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 }
 
 - (id)selectedObject{
-    return _options[ZNKselectedObject];
+    return _options[ZNKDefaultSelectedObject];
 }
 
 - (UIFont *)pickerViewFont{
@@ -1473,9 +1590,6 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     }
     return @"取消";
 }
-
-
-
 
 
 - (UIButton *)cancelButton{
@@ -1724,11 +1838,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
             break;
         case 2:
         {
-            if (component == 0) {
-                return _pickerViewKeys.count;
-            }else{
-                return _pickerViewArray.count;
-            }
+            return _pickerViewArray.count;
         }
         default:
             break;
