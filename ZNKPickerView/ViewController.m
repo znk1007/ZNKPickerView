@@ -20,15 +20,40 @@
     // Do any additional setup after loading the view, typically from a nib.
     
     UIButton *testButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    testButton.frame = CGRectMake(CGRectGetWidth(self.view.frame) / 2 - 30, CGRectGetHeight(self.view.frame) / 2 - 100, 60, 40);
-    [testButton setTitle:@"测试" forState:UIControlStateNormal];
+    testButton.frame = CGRectMake(CGRectGetWidth(self.view.frame) / 2 - 30, 100, 60, 40);
+    testButton.tag = 100;
+    [testButton setTitle:@"测试1" forState:UIControlStateNormal];
     [testButton setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
-    [testButton addTarget:self action:@selector(testPickerView) forControlEvents:UIControlEventTouchUpInside];
+    [testButton addTarget:self action:@selector(testPickerView:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:testButton];
+    
+    testButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    testButton.frame = CGRectMake(CGRectGetWidth(self.view.frame) / 2 - 30, 150, 60, 40);
+    testButton.tag = 101;
+    [testButton setTitle:@"测试2" forState:UIControlStateNormal];
+    [testButton setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+    [testButton addTarget:self action:@selector(testPickerView:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:testButton];
+    
+    testButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    testButton.frame = CGRectMake(CGRectGetWidth(self.view.frame) / 2 - 30, 200, 60, 40);
+    testButton.tag = 102;
+    [testButton setTitle:@"测试3" forState:UIControlStateNormal];
+    [testButton setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+    [testButton addTarget:self action:@selector(testPickerView:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:testButton];
+    
+    testButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    testButton.frame = CGRectMake(CGRectGetWidth(self.view.frame) / 2 - 30, 250, 60, 40);
+    testButton.tag = 103;
+    [testButton setTitle:@"测试4" forState:UIControlStateNormal];
+    [testButton setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+    [testButton addTarget:self action:@selector(testPickerView:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:testButton];
     
 }
 
-- (void)testPickerView{
+- (void)testPickerView:(UIButton *)btn{
 //    [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeDateTimeMode title:@"这是测试" withObject:@[@"从相册选择",@"拍照"] withOptions:nil hasInput:NO hasNav:NO objectToStringConverter:^NSString *(id obj) {
 //        return [obj description];
 //    } completion:^(ZNKPickerView *pickerView, NSString *input, NSInteger index, id obj) {
@@ -37,18 +62,55 @@
 //        
 //    }];
     
-    NSDictionary *option = @{};
-    [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeDateTimeMode options:option objectToStringConverter:^NSString *(id obj) {
-        return [obj description];
-    } realTimeResult:^(ZNKPickerView *pickerView) {
-        NSLog(@"realTimeResult picker view index %ld",(long)pickerView.index);
-        NSLog(@"realTimeResult picker view input %@", pickerView.inputResult);
-        NSLog(@"realTimeResult picker view select result %@",pickerView.result);
-    } completionHandler:^(ZNKPickerView *pickerView) {
-        NSLog(@"completionHandler picker view index %ld",(long)pickerView.index);
-        NSLog(@"completionHandler picker view input %@", pickerView.inputResult);
-        NSLog(@"completionHandler picker view select result %@",pickerView.result);
-    }];
+    switch (btn.tag) {
+        case 100:
+        {
+            NSDictionary *option = @{};
+            [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeDateTimeMode options:option objectToStringConverter:^NSString *(id obj) {
+                return [obj description];
+            } realTimeResult:^(ZNKPickerView *pickerView) {
+                NSLog(@"realTimeResult picker view index %ld",(long)pickerView.index);
+                NSLog(@"realTimeResult picker view input %@", pickerView.inputResult);
+                NSLog(@"realTimeResult picker view select result %@",pickerView.result);
+            } completionHandler:^(ZNKPickerView *pickerView) {
+                NSLog(@"completionHandler picker view index %ld",(long)pickerView.index);
+                NSLog(@"completionHandler picker view input %@", pickerView.inputResult);
+                NSLog(@"completionHandler picker view select result %@",pickerView.result);
+            }];
+        }
+            break;
+        case 101:
+        {
+            NSDictionary *option = @{};
+            [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeActionSheet options:option objectToStringConverter:^NSString *(id obj) {
+                return [obj description];
+            } realTimeResult:^(ZNKPickerView *pickerView) {
+                NSLog(@"realTimeResult picker view index %ld",(long)pickerView.index);
+                NSLog(@"realTimeResult picker view input %@", pickerView.inputResult);
+                NSLog(@"realTimeResult picker view select result %@",pickerView.result);
+            } completionHandler:^(ZNKPickerView *pickerView) {
+                NSLog(@"completionHandler picker view index %ld",(long)pickerView.index);
+                NSLog(@"completionHandler picker view input %@", pickerView.inputResult);
+                NSLog(@"completionHandler picker view select result %@",pickerView.result);
+            }];
+        }
+            break;
+        case 102:
+        {
+            
+        }
+            break;
+        case 103:
+        {
+            
+        }
+            break;
+            
+        default:
+            break;
+    }
+    
+    
 }
 
 - (void)viewDidAppear:(BOOL)animated{

@@ -650,6 +650,8 @@ NSString * const ZNKDatePickerBackgroundImage = @"ZNKDatePickerViewBackgroundIma
 NSString * const ZNKDatePickerTextColor = @"ZNKDatePickerViewTextColor";
 NSString * const ZNKDatePickerDefaultDate = @"ZNKDatePickerDefaultDate";
 
+
+
 NSString * const ZNKsuviewsbackgroundColor = @"ZNKsuviewsbackgroundColor";
 NSString * const ZNKtoolbarColor = @"ZNKtoolbarColor";
 NSString * const ZNKcomfirmButtonColor = @"ZNKcomfirmButtonColor";
@@ -846,10 +848,6 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 /**选中结果*/
 @property (nonatomic, strong) id result;
 /**实时回调*/
-@property (nonatomic, copy) void(^ZNKPickertViewResult)(ZNKPickerView *pickerView,NSString *input, NSInteger index, NSObject *obj);
-/**点击确定时候的回调*/
-@property (nonatomic, copy) void(^ZNKPickertViewConfirmResult)(ZNKPickerView *pickerView,NSString *input, NSInteger index, NSObject *obj);
-/**实时回调*/
 @property (nonatomic, copy) void(^ZNKPickerRealTimeResult)(ZNKPickerView *pickerView);
 /**确定时候的回调*/
 @property (nonatomic, copy) void(^ZNKPickerConfirmResult)(ZNKPickerView *pickerView);
@@ -865,7 +863,6 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
         obj = nil;
     }];
     _pickerViewArray = nil;
-    _ZNKPickertViewResult = nil;
     _options = nil;
     _pickerViewDict = nil;
     _result = nil;
@@ -881,13 +878,6 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     [view addSubview:sheet];
 }
 
-+ (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type title:(NSString *)title withObject:(id)objects withOptions:(NSDictionary *)options hasInput:(BOOL)hasInput hasNav:(BOOL)hasNav objectToStringConverter:(NSString *(^)(id))converter completion:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))completionBlock confirmHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))confirmBlock{
-    UIView *sheet = [[self alloc] initWithFrame:view.bounds superView:view  pickerType:type title: title withObject:objects withOptions:options hasInput:hasInput hasNav: hasNav objectToStringConverter:converter resultBlock:completionBlock confirmHandler:confirmBlock];
-    if (view == nil) {
-        return;
-    }
-    [view addSubview:sheet];
-}
 
 - (instancetype)initWithFrame:(CGRect)frame superView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options objectToStringConverter:(NSString *(^)(id))converter  realTimeResult:(void(^)(ZNKPickerView *pickerView))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView))completionHandler
 {
@@ -899,87 +889,13 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
         _ZNKPickerConfirmResult = completionHandler;
         _objectToStringConverter = converter;
         _options = options;
+        [self addSubview:self.coverView];
         [self baseInitialize];
     }
     return self;
 }
 
-- (instancetype)initWithFrame:(CGRect)frame superView:(UIView *)view  pickerType:(ZNKPickerType)type title:(NSString *)title  withObject:(id)objects withOptions:(NSDictionary *)options hasInput:(BOOL)has hasNav:(BOOL)hasNav  objectToStringConverter:(NSString *(^)(id))converter resultBlock:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))block confirmHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))confirmBlock
-{
-    self = [super initWithFrame:frame];
-    if (self) {
-        _hasInput = has;
-        _mainView = view;
-        _ZNKPickertViewResult = block;
-        _ZNKPickertViewConfirmResult = confirmBlock;
-        _type = type;
-        _options = options;
-        _objectToStringConverter = converter;
-        _inputString = @"";
-        if ([objects isKindOfClass:[NSArray class]]) {
-            _pickerClass = 1;
-            _pickerViewArray = (NSArray *)objects;
-            _result = _pickerViewArray.firstObject;
-        }else if ([objects isKindOfClass:[NSDictionary class]]){
-            _pickerClass = 2;
-            NSDictionary *objDict = (NSDictionary *)objects;
-            _pickerViewDict = objDict;
-            _pickerViewArray = objDict.allValues;
-            _result = _pickerViewArray.firstObject;
-        }else if ([objects isKindOfClass:[NSString class]]){
-            _inputString = (NSString *)objects;
-        }
-        
-        [self addSubview:self.coverView];
-        
-        switch (_type) {
-            case ZNKPickerTypeObject:
-            {
-                switch (_pickerClass) {
-                    case 1:
-                    {
-                        [self initializeForArray];
-                    }
-                        break;
-                    case 2:
-                    {
-                        
-                    }
-                    default:
-                        break;
-                }
-            }
-                break;
-            case ZNKPickerTypeDateMode:
-            case ZNKPickerTypeTimeMode:
-            case ZNKPickerTypeDateTimeMode:
-            case ZNKPickerTypeYearMonthMode:
-            case ZNKPickerTypeMonthDayMode:
-            case ZNKPickerTypeHourMinuteMode:
-            case ZNKPickerTypeDateHourMinuteMode:
-            {
-                [self initializeForDate];
-            }
-                break;
-            case ZNKPickerTypeActionSheet:
-            {
-                [self initializeForActionSheet];
-            }
-                break;
-            case ZNKPickerTypeActionAlert:
-            {
-                [self initializeForActionAlert];
-            }
-                break;
-            default:
-                break;
-        }
-        if (_hasInput) {
-            self.keyboard = [[KeyboardManager alloc] initWithTargetView:self.inputTextField containerView:self.sheetView hasNav:hasNav contentOffset:0 showBlock:nil hideBlock:nil];
-        }
-    }
-    return self;
-}
+
 
 
 #pragma mark - private
@@ -1027,7 +943,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
         default:
             break;
     }
-    if (_hasInput) {
+    if (self.hasInput) {
         self.keyboard = [[KeyboardManager alloc] initWithTargetView:self.inputTextField containerView:self.sheetView hasNav:self.hasNav contentOffset:0 showBlock:nil hideBlock:nil];
     }
 }
@@ -1150,7 +1066,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     CGFloat messageHeight = 0;
     if (self.message && ![self.message isEqualToString:@""]) {
         [self.sheetView addSubview:self.messageLabel];
-        messageMaxY = CGRectGetMaxY(self.messageLabel.frame) + 1;
+        messageMaxY = CGRectGetMaxY(self.messageLabel.frame) + [self defaultToolbarPickerMargin];
         messageHeight = CGRectGetHeight(self.messageLabel.frame);
     }
     
@@ -1168,7 +1084,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, totalViewHeight);
     
     
-    _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + 1;
+    _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
     _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultSheetViewAnimationDuration];
     
     [self.sheetView addSubview:self.tableView];
@@ -1732,8 +1648,8 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     switch (_type) {
         case ZNKPickerTypeObject:
         {
-            if (_ZNKPickertViewConfirmResult) {
-                _ZNKPickertViewConfirmResult(self, nil, 0, _result);
+            if (_ZNKPickerConfirmResult) {
+                _ZNKPickerConfirmResult(self);
             }
         }
             break;
@@ -1757,35 +1673,36 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
         {
             switch (_type) {
                 case ZNKPickerTypeDateMode:
-                    _dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay];
                     break;
                 case ZNKPickerTypeTimeMode:
-                    _dateTimeStr = [NSString stringWithFormat:@"%02ld:%02ld:%02ld",(long)self.curHour,(long)self.curMin,(long)self.curSecond];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%02ld:%02ld:%02ld",(long)self.curHour,(long)self.curMin,(long)self.curSecond];
                     break;
                 case ZNKPickerTypeDateTimeMode:
-                    _dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld %02ld:%02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin,(long)self.curSecond];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld %02ld:%02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin,(long)self.curSecond];
                     break;
                 case ZNKPickerTypeMonthDayMode:
-                    _dateTimeStr = [NSString stringWithFormat:@"%ld-%ld",(long)self.curMonth,(long)self.curDay];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld",(long)self.curMonth,(long)self.curDay];
                     break;
                 case ZNKPickerTypeYearMonthMode:
-                    _dateTimeStr = [NSString stringWithFormat:@"%ld-%ld",(long)self.curYear,(long)self.curMonth];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld",(long)self.curYear,(long)self.curMonth];
                     break;
                 case ZNKPickerTypeHourMinuteMode:
-                    _dateTimeStr = [NSString stringWithFormat:@"%02ld:%02ld",(long)self.curHour,(long)self.curMin];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%02ld:%02ld",(long)self.curHour,(long)self.curMin];
                     break;
                 case ZNKPickerTypeDateHourMinuteMode:
-                    _dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld %02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld %02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin];
                     break;
                 default:
-                    _dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld %02ld:%02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin,(long)self.curSecond];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld %02ld:%02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin,(long)self.curSecond];
                     break;
             }
-            if (_ZNKPickertViewConfirmResult) {
+            if (_ZNKPickerConfirmResult) {
                 if (self.inputTextField) {
-                    _ZNKPickertViewConfirmResult(self, self.inputTextField.text, 0, _dateTimeStr);
+                    _ZNKPickerConfirmResult(self);
                 }else{
-                    _ZNKPickertViewConfirmResult(self, nil, 0, _dateTimeStr);
+                    _result = _dateTimeStr;
+                    _ZNKPickerConfirmResult(self);
                 }
             }
         }
@@ -1907,14 +1824,14 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
         {
             if (self.objectToStringConverter == nil) {
                 _result = [_pickerViewArray objectAtIndex:row];
-                if (_ZNKPickertViewResult) {
-                    _ZNKPickertViewResult(self, nil, 0, [_pickerViewArray objectAtIndex:row]);
+                if (_ZNKPickerConfirmResult) {
+                    _ZNKPickerConfirmResult(self);
                     _result = [_pickerViewArray objectAtIndex:row];
                 }
             } else{
                 _result = self.objectToStringConverter ([_pickerViewArray objectAtIndex:row]);
-                if (_ZNKPickertViewResult) {
-                    _ZNKPickertViewResult(self, nil, 0, self.objectToStringConverter ([_pickerViewArray objectAtIndex:row]));
+                if (_ZNKPickerConfirmResult) {
+                    _ZNKPickerConfirmResult(self);
                 }
             }
         }

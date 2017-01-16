@@ -60,6 +60,5 @@ typedef enum : NSUInteger {
 
 + (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options objectToStringConverter:(NSString *(^)(id))converter  realTimeResult:(void(^)(ZNKPickerView *pickerView))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView))completionHandler;
 
-+ (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type title:(NSString *)title withObject:(id)objects withOptions:(NSDictionary *)options hasInput:(BOOL)hasInput hasNav:(BOOL)hasNav objectToStringConverter:(NSString *(^)(id))converter completion:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))completionBlock confirmHandler:(void(^)(ZNKPickerView *pickerView,NSString *input, NSInteger index, id obj))confirmBlock;
 
 @end
