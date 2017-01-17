@@ -1076,9 +1076,10 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     CGFloat totalViewHeight = 44 + titleHeight + messageHeight + self.tableViewRowHeight * [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
     //CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - margin_cancelButton_to_otherButton;
     if (self.canScroll) {
-        totalViewHeight = 44 + titleHeight + messageHeight + self.tableViewRowHeight * 2 + 6;
+        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.tableViewRowHeight * [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
+        self.tableView.scrollEnabled = YES;
     }else{
-        totalViewHeight = 44 + titleHeight + messageHeight + _pickerViewArray.count * self.tableViewRowHeight + 6;
+        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.pickerViewArray.count * self.tableViewRowHeight + [self defaultPickerAndCancelButton];
     }
     
     self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, totalViewHeight);
@@ -1454,7 +1455,9 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
         _tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
         _tableView.delegate = self;
         _tableView.dataSource = self;
+        _tableView.scrollEnabled = NO;
         _tableView.rowHeight = 45;
+        _tableView.tableFooterView = [[UIView alloc] init];
         _tableView.separatorInset = UIEdgeInsetsZero;
         _tableView.layoutMargins = UIEdgeInsetsZero;
     }
