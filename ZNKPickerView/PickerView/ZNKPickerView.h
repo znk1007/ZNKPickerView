@@ -20,6 +20,8 @@
 - (instancetype)initWithTargetView:(UIView *)targetView containerView:(UIView *)containView hasNav:(BOOL)has contentOffset:(CGFloat)offset showBlock:(void(^)(CGRect keyboardFrame, NSNotification *notification))show hideBlock:(void(^)(CGRect keyboardFrame, NSNotification *notification))hide;
 
 @end
+
+extern NSString * const ZNKPickerViewData;
 extern NSString * const ZNKCoverViewAlpha;
 extern NSString * const ZNKsheetViewViewBackgroundColor;
 extern NSString * const ZNKsuviewsbackgroundColor;

@@ -1050,7 +1050,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 #pragma mark - 类似系统actionsheet
 
 - (void)initializeForActionSheet{
-    if (!_pickerViewArray) {
+    if (!self.pickerViewArray || self.pickerViewArray.count == 0) {
         return;
     }
     [self addSubview:self.sheetView];
@@ -1073,7 +1073,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     [self.sheetView addSubview:self.cancelButton];
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
     
-    CGFloat totalViewHeight = 44 + titleHeight + messageHeight + self.tableViewRowHeight * 2 + 6;
+    CGFloat totalViewHeight = 44 + titleHeight + messageHeight + self.tableViewRowHeight * [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
     //CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - margin_cancelButton_to_otherButton;
     if (self.canScroll) {
         totalViewHeight = 44 + titleHeight + messageHeight + self.tableViewRowHeight * 2 + 6;

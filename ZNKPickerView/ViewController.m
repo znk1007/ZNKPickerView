@@ -81,7 +81,7 @@
             break;
         case 101:
         {
-            NSDictionary *option = @{};
+            NSDictionary *option = @{ZNKPickerViewData:@[@"从相册选择",@"相机"]};
             [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeActionSheet options:option objectToStringConverter:^NSString *(id obj) {
                 return [obj description];
             } realTimeResult:^(ZNKPickerView *pickerView) {
