@@ -645,16 +645,9 @@ NSString * const ZNKToolbarBackgroundImage = @"ZNKToolbarBackgroundImage";
 NSString * const ZNKConfirmButtonTitle = @"ZNKConfirmButtonTitle";
 NSString * const ZNKConfirmButtonTitleColor = @"ZNKConfirmButtonTitleColor";
 
-NSString * const ZNKDatePickerBackgroundColor = @"ZNKDatePickerViewBackgroundColor";
-NSString * const ZNKDatePickerBackgroundImage = @"ZNKDatePickerViewBackgroundImage";
-NSString * const ZNKDatePickerTextColor = @"ZNKDatePickerViewTextColor";
-NSString * const ZNKDatePickerDefaultDate = @"ZNKDatePickerDefaultDate";
+NSString * const ZNKCanScroll = @"ZNKCanScroll";
+NSString * const ZNKTableRowHeight = @"ZNKTableRowHeight";
 
-
-
-NSString * const ZNKsuviewsbackgroundColor = @"ZNKsuviewsbackgroundColor";
-NSString * const ZNKtoolbarColor = @"ZNKtoolbarColor";
-NSString * const ZNKcomfirmButtonColor = @"ZNKcomfirmButtonColor";
 
 NSString * const ZNKtextAlignment = @"textAlignment";
 NSString * const ZNKshowsSelectionIndicator = @"showsSelectionIndicator";
@@ -663,9 +656,8 @@ NSString * const ZNKpickerViewFont = @"ZNKpickerViewFont";
 NSString * const ZNKpickerViewCancelTitle = @"ZNKpickerViewCancelTitle";
 NSString * const ZNKsheetViewViewBackgroundColor = @"ZNKsheetViewViewBackgroundColor";
 NSString * const ZNKleftInputViewTitle = @"ZNKleftInputViewTitle";
-NSString * const ZNKdefaultTableRowHeight = @"ZNKdefaultTableRowHeight";
-NSString * const ZNKcoverViewAlpha = @"ZNKcoverViewAlpha";
-NSString * const ZNKcanScroll = @"ZNKcanScroll";
+
+
 
 
 #define znk_screenWidth [UIScreen mainScreen].bounds.size.width
@@ -1054,6 +1046,11 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
         return;
     }
     [self addSubview:self.sheetView];
+    [self.sheetView addSubview:self.titleLabel];
+    [self.sheetView addSubview:self.messageLabel];
+    [self.sheetView addSubview:self.cancelButton];
+    [self.sheetView addSubview:self.tableView];
+    
     CGFloat titleMaxY = 0;
     CGFloat titleHeight = 0;
     if (self.title && ![self.title isEqualToString:@""]) {
@@ -1070,25 +1067,24 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
         messageHeight = CGRectGetHeight(self.messageLabel.frame);
     }
     
-    [self.sheetView addSubview:self.cancelButton];
-    self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
+    CGFloat totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.tableViewRowHeight * [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
     
-    CGFloat totalViewHeight = 44 + titleHeight + messageHeight + self.tableViewRowHeight * [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
-    //CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - margin_cancelButton_to_otherButton;
+    _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
+    NSInteger arrayCount = self.pickerViewArray.count;
+    _pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? 3 : arrayCount;
     if (self.canScroll) {
-        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.tableViewRowHeight * [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
+        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.tableViewRowHeight * arrayCount >= 3 ? 3 : arrayCount + [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
+        _pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? 3 : arrayCount;
         self.tableView.scrollEnabled = YES;
     }else{
         totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.pickerViewArray.count * self.tableViewRowHeight + [self defaultPickerAndCancelButton];
+        _pickerViewHeight = self.pickerViewArray.count * self.tableViewRowHeight;
+        self.tableView.scrollEnabled = NO;
     }
     
     self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, totalViewHeight);
+    self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - [self defaultToolbarHeight], CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
     
-    
-    _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
-    _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultSheetViewAnimationDuration];
-    
-    [self.sheetView addSubview:self.tableView];
     self.tableView.frame = CGRectMake(0, _pickerViewMinY, CGRectGetWidth(self.sheetView.frame), _pickerViewHeight);
     
     [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
@@ -1100,7 +1096,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 #pragma mark - 类似系统actionalert
 
 - (void)initializeForActionAlert{
-    if (!_pickerViewArray) {
+    if (!self.pickerViewArray) {
         return;
     }
     
@@ -1170,8 +1166,8 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 #pragma mark - 遮罩视图透明度
 
 - (CGFloat)coverViewAlpha{
-    if (_options[ZNKcoverViewAlpha] != nil && [_options[ZNKcoverViewAlpha] isKindOfClass:[NSNumber class]]) {
-        return ((NSNumber *)_options[ZNKcoverViewAlpha]).floatValue;
+    if (_options[ZNKCoverViewAlpha] != nil && [_options[ZNKCoverViewAlpha] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKCoverViewAlpha]).floatValue;
     }
     return 0.3;
 }
@@ -1386,8 +1382,8 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 #pragma mark - 日期选择器背景颜色
 
 - (UIColor *)datePickerBackgroundColor{
-    if (_options[ZNKDatePickerBackgroundColor] && [_options[ZNKDatePickerBackgroundColor] isKindOfClass:[UIColor class]]) {
-        return (UIColor *)_options[ZNKDatePickerBackgroundColor];
+    if (_options[ZNKSheetViewBackgroundColor] && [_options[ZNKSheetViewBackgroundColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKSheetViewBackgroundColor];
     }
     return [UIColor whiteColor];
 }
@@ -1395,8 +1391,8 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 #pragma mark - 日期选择器背景图片
 
 - (UIImage *)datePickerBackgroundImage{
-    if (_options[ZNKDatePickerBackgroundImage] && [_options[ZNKDatePickerBackgroundImage] isKindOfClass:[UIImage class]]) {
-        return (UIImage *)_options[ZNKDatePickerBackgroundImage];
+    if (_options[ZNKSheetViewBackgroundImage] && [_options[ZNKSheetViewBackgroundImage] isKindOfClass:[UIImage class]]) {
+        return (UIImage *)_options[ZNKSheetViewBackgroundImage];
     }
     if (!_datePickerBackgroundImage) {
         _datePickerBackgroundImage = [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
@@ -1407,8 +1403,8 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 #pragma mark - 日期选择器默认日期
 
 - (NSDate *)defaultDate{
-    if (_options[ZNKDatePickerDefaultDate] && [_options[ZNKDatePickerDefaultDate] isKindOfClass:[NSDate class]]) {
-        return _options[ZNKDatePickerDefaultDate];
+    if (_options[ZNKDefaultSelectedObject] && [_options[ZNKDefaultSelectedObject] isKindOfClass:[NSDate class]]) {
+        return _options[ZNKDefaultSelectedObject];
     }
     return [NSDate date];
 }
@@ -1444,10 +1440,10 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 
 
 - (CGFloat)tableViewRowHeight{
-    if ([_options[ZNKdefaultTableRowHeight] isKindOfClass:[NSNumber class]]) {
-        return ((NSNumber *)_options[ZNKdefaultTableRowHeight]).floatValue;
+    if ([_options[ZNKTableRowHeight] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKTableRowHeight]).floatValue;
     }
-    return 45;
+    return 45.0;
 }
 
 - (UITableView *)tableView{
@@ -1456,7 +1452,6 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
         _tableView.delegate = self;
         _tableView.dataSource = self;
         _tableView.scrollEnabled = NO;
-        _tableView.rowHeight = 45;
         _tableView.tableFooterView = [[UIView alloc] init];
         _tableView.separatorInset = UIEdgeInsetsZero;
         _tableView.layoutMargins = UIEdgeInsetsZero;
@@ -1476,13 +1471,13 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 
 - (NSInteger)selectedIndex{
     if (self.selectedObject) {
-        if ([_pickerViewArray indexOfObject:self.selectedObject] > 0 && [_pickerViewArray indexOfObject:self.selectedObject] < _pickerViewArray.count) {
+        if ([self.pickerViewArray indexOfObject:self.selectedObject] > 0 && [_pickerViewArray indexOfObject:self.selectedObject] < _pickerViewArray.count) {
             _result = self.selectedObject;
-            return [_pickerViewArray indexOfObject:self.selectedObject];
+            return [self.pickerViewArray indexOfObject:self.selectedObject];
         }
         return 0;
     }
-    return [[_pickerViewArray objectAtIndex:0] integerValue];
+    return [[self.pickerViewArray objectAtIndex:0] integerValue];
 }
 
 - (id)selectedObject{
@@ -1517,7 +1512,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 }
 
 - (UIColor *)pickerViewBackgroundColor{
-    UIColor *pickerViewBackgroundColor = _options[ZNKsuviewsbackgroundColor];
+    UIColor *pickerViewBackgroundColor = _options[ZNKSheetViewBackgroundColor];
     if (pickerViewBackgroundColor != nil) {
         return pickerViewBackgroundColor;
     }
@@ -1729,7 +1724,7 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
 #pragma mark - table view delegate and data source
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return _pickerViewArray.count;
+    return self.pickerViewArray.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -1738,20 +1733,32 @@ NSString * const ZNKcanScroll = @"ZNKcanScroll";
     if (!cell) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
     }
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.separatorInset = UIEdgeInsetsZero;
     cell.layoutMargins = UIEdgeInsetsZero;
-    [cell.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+    [cell.contentView.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         [obj removeFromSuperview];
     }];
     UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(tableView.frame), self.tableViewRowHeight)];
-    titleLabel.text = _pickerViewArray[indexPath.row];
+    titleLabel.text = self.pickerViewArray[indexPath.row];
+    titleLabel.textColor = self.pickerViewTextColor;
     titleLabel.textAlignment = NSTextAlignmentCenter;
     titleLabel.font = [UIFont systemFontOfSize:18];
+    [cell.contentView addSubview:titleLabel];
     return cell;
 }
 
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return self.tableViewRowHeight;
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    
+    _result = self.pickerViewArray[indexPath.row];
+    _index = indexPath.row;
+    if (_ZNKPickerConfirmResult) {
+        _ZNKPickerConfirmResult(self);
+    }
+    [self dismissView];
 }
 
 #pragma mark - picker view delegate and data source

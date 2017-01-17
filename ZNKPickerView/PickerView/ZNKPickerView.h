@@ -23,20 +23,9 @@
 
 extern NSString * const ZNKPickerViewData;
 extern NSString * const ZNKCoverViewAlpha;
-extern NSString * const ZNKsheetViewViewBackgroundColor;
-extern NSString * const ZNKsuviewsbackgroundColor;
-extern NSString * const ZNKtoolbarColor;
-extern NSString * const ZNKcomfirmButtonColor;
-extern NSString * const ZNKConfirmButtonTitle;
-extern NSString * const ZNKDefaultSelectedObject;
-extern NSString * const ZNKtextAlignment;
-extern NSString * const ZNKshowsSelectionIndicator;
-extern NSString * const ZNKpickerViewTitleColor;
-extern NSString * const ZNKpickerViewFont;
-extern NSString * const ZNKpickerViewCancelTitle;
-extern NSString * const ZNKdefaultTableRowHeight;
-extern NSString * const ZNKleftInputViewTitle;
-extern NSString * const ZNKDatePickerDefaultDate;
+extern NSString * const ZNKTableRowHeight;
+extern NSString * const ZNKSheetViewBackgroundImage;
+extern NSString * const ZNKCanScroll;
 
 typedef enum : NSUInteger {
     ZNKPickerTypeDateMode,
