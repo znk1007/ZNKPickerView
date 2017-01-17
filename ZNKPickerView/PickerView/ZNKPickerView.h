@@ -26,6 +26,7 @@ extern NSString * const ZNKCoverViewAlpha;
 extern NSString * const ZNKTableRowHeight;
 extern NSString * const ZNKSheetViewBackgroundImage;
 extern NSString * const ZNKCanScroll;
+extern NSString * const ZNKTextAlignment;
 
 typedef enum : NSUInteger {
     ZNKPickerTypeDateMode,

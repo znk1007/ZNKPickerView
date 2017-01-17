@@ -630,32 +630,31 @@
 }
 @end
 
-NSString * const ZNKCoverViewAlpha = @"ZNKCoverViewAlpha";
-NSString * const ZNKSheetViewBackgroundColor = @"ZNKSheetViewBackgroundColor";
-NSString * const ZNKSheetViewBackgroundImage = @"ZNKSheetViewBackgroundImage";
-NSString * const ZNKPickerViewData = @"ZNKPickerViewData";
-NSString * const ZNKDefaultSelectedObject = @"selectedObject";
-NSString * const ZNKDefaultHasNavigationBar = @"ZNKDefaultHasNavigationBar";
+NSString * const ZNKCoverViewAlpha                  = @"ZNKCoverViewAlpha";
+NSString * const ZNKSheetViewBackgroundColor        = @"ZNKSheetViewBackgroundColor";
+NSString * const ZNKSheetViewBackgroundImage        = @"ZNKSheetViewBackgroundImage";
+NSString * const ZNKPickerViewData                  = @"ZNKPickerViewData";
+NSString * const ZNKDefaultSelectedObject           = @"ZNKDefaultSelectedObject";
+NSString * const ZNKDefaultHasNavigationBar         = @"ZNKDefaultHasNavigationBar";
 
-NSString * const ZNKToolbarBackgroundColor = @"ZNKToolbarBackgroundColor";
-NSString * const ZNKToolbarHasInput = @"ZNKToolbarHasInput";
-NSString * const ZNKToolbarInputLeftView = @"ZNKToolbarInputLeftView";
-NSString * const ZNKToolbarInputPlachodler = @"ZNKToolbarInputPlachodler";
-NSString * const ZNKToolbarBackgroundImage = @"ZNKToolbarBackgroundImage";
-NSString * const ZNKConfirmButtonTitle = @"ZNKConfirmButtonTitle";
-NSString * const ZNKConfirmButtonTitleColor = @"ZNKConfirmButtonTitleColor";
+NSString * const ZNKToolbarBackgroundColor          = @"ZNKToolbarBackgroundColor";
+NSString * const ZNKToolbarHasInput                 = @"ZNKToolbarHasInput";
+NSString * const ZNKToolbarInputLeftView            = @"ZNKToolbarInputLeftView";
+NSString * const ZNKToolbarInputPlachodler          = @"ZNKToolbarInputPlachodler";
+NSString * const ZNKToolbarBackgroundImage          = @"ZNKToolbarBackgroundImage";
+NSString * const ZNKConfirmButtonTitle              = @"ZNKConfirmButtonTitle";
+NSString * const ZNKConfirmButtonTitleColor         = @"ZNKConfirmButtonTitleColor";
 
-NSString * const ZNKCanScroll = @"ZNKCanScroll";
-NSString * const ZNKTableRowHeight = @"ZNKTableRowHeight";
+NSString * const ZNKCanScroll                       = @"ZNKCanScroll";
+NSString * const ZNKTableRowHeight                  = @"ZNKTableRowHeight";
+NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 
-
-NSString * const ZNKtextAlignment = @"textAlignment";
-NSString * const ZNKshowsSelectionIndicator = @"showsSelectionIndicator";
-NSString * const ZNKpickerViewTitleColor = @"ZNKpickerViewTitleColor";
-NSString * const ZNKpickerViewFont = @"ZNKpickerViewFont";
-NSString * const ZNKpickerViewCancelTitle = @"ZNKpickerViewCancelTitle";
-NSString * const ZNKsheetViewViewBackgroundColor = @"ZNKsheetViewViewBackgroundColor";
-NSString * const ZNKleftInputViewTitle = @"ZNKleftInputViewTitle";
+NSString * const ZNKShowsSelectionIndicator         = @"ZNKShowsSelectionIndicator";
+NSString * const ZNKPickerViewTitleColor            = @"ZNKPickerViewTitleColor";
+NSString * const ZNKpickerViewFont                  = @"ZNKpickerViewFont";
+NSString * const ZNKpickerViewCancelTitle           = @"ZNKpickerViewCancelTitle";
+NSString * const ZNKSheetViewViewBackgroundColor    = @"ZNKSheetViewViewBackgroundColor";
+NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
 
 
 
@@ -771,20 +770,10 @@ NSString * const ZNKleftInputViewTitle = @"ZNKleftInputViewTitle";
 @property (nonatomic, assign) NSInteger curSecond;
 /**默认日期*/
 @property (nonatomic, strong) NSDate *defaultDate;
-
-
-
+/**是否可以滚动*/
 @property (nonatomic, assign) BOOL canScroll;
-
-
-
-
 /** 其他按钮表格 */
 @property (nonatomic, strong) UITableView *tableView;
-
-
-
-
 /**提示title*/
 @property (nonatomic, copy) NSString *title;
 /**提示titleLabel*/
@@ -1206,8 +1195,8 @@ NSString * const ZNKleftInputViewTitle = @"ZNKleftInputViewTitle";
 #pragma mark - 弹框视图背景颜色
 
 - (UIColor *)sheetViewBackgroundColor{
-    if (_options[ZNKsheetViewViewBackgroundColor] != nil && [_options[ZNKsheetViewViewBackgroundColor] isKindOfClass:[UIColor class]]) {
-        return (UIColor *)_options[ZNKsheetViewViewBackgroundColor];
+    if (_options[ZNKSheetViewViewBackgroundColor] != nil && [_options[ZNKSheetViewViewBackgroundColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKSheetViewViewBackgroundColor];
     }
     return [UIColor colorFromHexString:@"#ECE3E6"];
 }
@@ -1462,9 +1451,8 @@ NSString * const ZNKleftInputViewTitle = @"ZNKleftInputViewTitle";
 
 
 - (BOOL)pickerViewShowsSelectionIndicator{
-    id showSelectionIndicator = _options[ZNKshowsSelectionIndicator];
-    if (showSelectionIndicator) {
-        return [showSelectionIndicator boolValue];
+    if (_options[ZNKShowsSelectionIndicator] && [_options[ZNKShowsSelectionIndicator] isKindOfClass:[NSNumber class]]) {
+        return [((NSNumber *)_options[ZNKShowsSelectionIndicator]) boolValue];
     }
     return YES;
 }
@@ -1495,18 +1483,17 @@ NSString * const ZNKleftInputViewTitle = @"ZNKleftInputViewTitle";
 
 - (NSInteger)pickerViewTextAlignment{
     NSNumber *textAlignment = [[NSNumber alloc] init];
-    textAlignment = _options[ZNKtextAlignment];
+    textAlignment = _options[ZNKTextAlignment];
     
     if (textAlignment != nil) {
-        return [_options[ZNKtextAlignment] integerValue];
+        return [_options[ZNKTextAlignment] integerValue];
     }
     return 1;
 }
 
 - (UIColor *)pickerViewTextColor{
-    UIColor *pickerViewTextColor = _options[ZNKpickerViewTitleColor];
-    if (pickerViewTextColor != nil) {
-        return pickerViewTextColor;
+    if (_options[ZNKPickerViewTitleColor] && [_options[ZNKPickerViewTitleColor] isKindOfClass:[UIColor class]]) {
+        return ((UIColor *)_options[ZNKPickerViewTitleColor]);
     }
     return [UIColor colorFromHexString:@"#E0748E"];
 }
@@ -1540,7 +1527,6 @@ NSString * const ZNKleftInputViewTitle = @"ZNKleftInputViewTitle";
     }
     return _cancelButton;
 }
-
 
 
 //- (UILabel *)dateSepratorLabel{
