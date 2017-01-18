@@ -9,10 +9,10 @@
 #import "ZNKPickerView.h"
 #define kScreen_Height [UIScreen mainScreen].bounds.size.height
 #define kScreen_Width [UIScreen mainScreen].bounds.size.width
-#define kScaleFrom_iPhone5_Desgin(_X_) (_X_ * (CGRectGetWidth(self.datePickerContainerView.frame)/320))
+#define kScaleFrom_iPhone5_Desgin(_X_) (_X_ * (CGRectGetWidth(self.pickerContainerView.frame)/320))
 #define kTopViewHeight kScaleFrom_iPhone5_Desgin(44)
 #define kTimeBroadcastViewHeight kScaleFrom_iPhone5_Desgin(200)
-#define kDatePickerHeight (0 + CGRectGetHeight(self.datePickerContainerView.frame))
+#define kDatePickerHeight (0 + CGRectGetHeight(self.pickerContainerView.frame))
 #define kOKBtnTag 101
 #define kCancleBtnTag 100
 
@@ -636,7 +636,13 @@ NSString * const ZNKSheetViewBackgroundImage        = @"ZNKSheetViewBackgroundIm
 NSString * const ZNKPickerViewData                  = @"ZNKPickerViewData";
 NSString * const ZNKDefaultSelectedObject           = @"ZNKDefaultSelectedObject";
 NSString * const ZNKDefaultHasNavigationBar         = @"ZNKDefaultHasNavigationBar";
-NSString * const ZNKSheetViewCancelTitle           = @"ZNKPickerViewCancelTitle";
+
+NSString * const ZNKSheetViewCancelTitle            = @"ZNKPickerViewCancelTitle";
+NSString * const ZNKShowsSelectionIndicator         = @"ZNKShowsSelectionIndicator";
+NSString * const ZNKPickerViewTitleColor            = @"ZNKPickerViewTitleColor";
+NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
+NSString * const ZNKPickerViewBackgroundColor       = @"ZNKPickerViewBackgroundColor";
+NSString * const ZNKPickerViewBackgroundImage       = @"ZNKPickerViewBackgroundImage";
 
 NSString * const ZNKToolbarBackgroundColor          = @"ZNKToolbarBackgroundColor";
 NSString * const ZNKToolbarHasInput                 = @"ZNKToolbarHasInput";
@@ -651,9 +657,7 @@ NSString * const ZNKVerticalScrollIndicator         = @"ZNKVerticalScrollIndicat
 NSString * const ZNKTableRowHeight                  = @"ZNKTableRowHeight";
 NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 
-NSString * const ZNKShowsSelectionIndicator         = @"ZNKShowsSelectionIndicator";
-NSString * const ZNKPickerViewTitleColor            = @"ZNKPickerViewTitleColor";
-NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
+
 
 
 
@@ -683,7 +687,12 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
 @property (nonatomic, assign) CGFloat coverViewAlpha;
 /** 取消按钮 */
 @property (nonatomic, strong) UIButton *cancelButton;
-
+/**日期选择器容器*/
+@property (nonatomic, strong) UIImageView *pickerContainerView;
+/**日期选择器背景颜色*/
+@property (nonatomic, strong) UIColor *pickerBackgroundColor;
+/**日期选择器背景图片*/
+@property (nonatomic, strong) UIImage *pickerBackgroundImage;
 #pragma mark - 基本数据属性
 /**配置项*/
 @property (nonatomic, strong) NSDictionary *options;
@@ -737,12 +746,7 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
 @property (nonatomic, assign) BOOL hasNav;
 
 #pragma mark - 日期选择器
-/**日期选择器容器*/
-@property (nonatomic, strong) UIImageView *datePickerContainerView;
-/**日期选择器背景颜色*/
-@property (nonatomic, strong) UIColor *datePickerBackgroundColor;
-/**日期选择器背景图片*/
-@property (nonatomic, strong) UIImage *datePickerBackgroundImage;
+
 /**日期字符串*/
 @property (nonatomic, strong) NSString *dateTimeStr;
 /**年份滚动视图*/
@@ -787,9 +791,6 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
 @property (nonatomic, copy) NSString *message;
 /**提示内容Label*/
 @property (nonatomic, strong) UILabel *messageLabel;
-
-
-
 /**选择器*/
 @property (nonatomic, strong) UIPickerView *pickerView;
 /**文字停靠*/
@@ -981,8 +982,8 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
     CGFloat pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
     
-    [self.sheetView addSubview:self.datePickerContainerView];
-    self.datePickerContainerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
+    [self.sheetView addSubview:self.pickerContainerView];
+    self.pickerContainerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
     
     
     if (_type == ZNKPickerTypeDateMode) {
@@ -1023,9 +1024,9 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
         [self set_minuteScrollView];
     }
     
-//    [self.datePickerContainerView addSubview:self.dateSepratorLabel];
-//    CGFloat labelHeight = CGRectGetHeight(self.datePickerContainerView.frame) * (1 / 5.0);
-//    self.dateSepratorLabel.frame = CGRectMake(0, (CGRectGetHeight(self.datePickerContainerView.frame) - labelHeight) / 2, CGRectGetWidth(self.datePickerContainerView.frame), labelHeight);
+//    [self.pickerContainerView addSubview:self.dateSepratorLabel];
+//    CGFloat labelHeight = CGRectGetHeight(self.pickerContainerView.frame) * (1 / 5.0);
+//    self.dateSepratorLabel.frame = CGRectMake(0, (CGRectGetHeight(self.pickerContainerView.frame) - labelHeight) / 2, CGRectGetWidth(self.pickerContainerView.frame), labelHeight);
 
     [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
@@ -1188,21 +1189,31 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     return _sheetView;
 }
 
+#pragma mark - 工具栏到picker view之间的距离
+
 - (CGFloat)defaultToolbarPickerMargin{
     return 1.0f;
 }
+
+#pragma mark - picker view到取消按钮之间的距离
 
 - (CGFloat)defaultPickerAndCancelButton{
     return 5.0f;
 }
 
+#pragma mark - 默认sheet view高度
+
 - (CGFloat)defaultSheetViewHeight{
     return 216.0f;
 }
 
+#pragma mark - 默认弹出时间
+
 - (CGFloat)defaultSheetViewAnimationDuration{
     return 0.25f;
 }
+
+#pragma mark - 默认工具栏高度
 
 - (CGFloat)defaultToolbarHeight{
     return 44.0f;
@@ -1374,35 +1385,35 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
 
 #pragma mark - 日期选择器
 
-- (UIImageView *)datePickerContainerView{
-    if (!_datePickerContainerView) {
-        _datePickerContainerView = [[UIImageView alloc] init];
-        _datePickerContainerView.userInteractionEnabled = YES;
-        _datePickerContainerView.backgroundColor = self.datePickerBackgroundColor;
-        _datePickerContainerView.image = self.datePickerBackgroundImage;
+- (UIImageView *)pickerContainerView{
+    if (!_pickerContainerView) {
+        _pickerContainerView = [[UIImageView alloc] init];
+        _pickerContainerView.userInteractionEnabled = YES;
+        _pickerContainerView.backgroundColor = self.pickerBackgroundColor;
+        _pickerContainerView.image = self.pickerBackgroundImage;
     }
-    return _datePickerContainerView;
+    return _pickerContainerView;
 }
 
 #pragma mark - 日期选择器背景颜色
 
-- (UIColor *)datePickerBackgroundColor{
-    if (_options[ZNKSheetViewBackgroundColor] && [_options[ZNKSheetViewBackgroundColor] isKindOfClass:[UIColor class]]) {
-        return (UIColor *)_options[ZNKSheetViewBackgroundColor];
+- (UIColor *)pickerBackgroundColor{
+    if (_options[ZNKPickerViewBackgroundColor] && [_options[ZNKPickerViewBackgroundColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKPickerViewBackgroundColor];
     }
     return [UIColor whiteColor];
 }
 
 #pragma mark - 日期选择器背景图片
 
-- (UIImage *)datePickerBackgroundImage{
-    if (_options[ZNKSheetViewBackgroundImage] && [_options[ZNKSheetViewBackgroundImage] isKindOfClass:[UIImage class]]) {
-        return (UIImage *)_options[ZNKSheetViewBackgroundImage];
+- (UIImage *)pickerBackgroundImage{
+    if (_options[ZNKPickerViewBackgroundImage] && [_options[ZNKPickerViewBackgroundImage] isKindOfClass:[UIImage class]]) {
+        return (UIImage *)_options[ZNKPickerViewBackgroundImage];
     }
-    if (!_datePickerBackgroundImage) {
-        _datePickerBackgroundImage = [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
+    if (!_pickerBackgroundImage) {
+        _pickerBackgroundImage = [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
     }
-    return _datePickerBackgroundImage;
+    return _pickerBackgroundImage;
 }
 
 #pragma mark - 日期选择器默认日期
@@ -1414,12 +1425,16 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     return [NSDate date];
 }
 
+#pragma mark - 日期选择器是否可以滚动
+
 - (BOOL)canScroll{
     if (_options[ZNKCanScroll] && [_options[ZNKCanScroll] isKindOfClass:[NSNumber class]]) {
         return ((NSNumber *)_options[ZNKCanScroll]).boolValue;
     }
     return NO;
 }
+
+#pragma mark - 日期选择器是否显示滚动条
 
 - (BOOL)verticalScrollIndicator{
     if (_options[ZNKVerticalScrollIndicator] && [_options[ZNKVerticalScrollIndicator] isKindOfClass:[NSNumber class]]) {
@@ -1428,12 +1443,16 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     return YES;
 }
 
+#pragma mark - 日期选择器表格高度
+
 - (CGFloat)tableViewRowHeight{
     if ([_options[ZNKTableRowHeight] isKindOfClass:[NSNumber class]]) {
         return ((NSNumber *)_options[ZNKTableRowHeight]).floatValue;
     }
     return 45.0;
 }
+
+#pragma mark - 日期选择器
 
 - (UITableView *)tableView{
     if (!_tableView) {
@@ -1448,7 +1467,7 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     return _tableView;
 }
 
-
+#pragma mark - 日期选择器选中警示
 
 - (BOOL)pickerViewShowsSelectionIndicator{
     if (_options[ZNKShowsSelectionIndicator] && [_options[ZNKShowsSelectionIndicator] isKindOfClass:[NSNumber class]]) {
@@ -1456,6 +1475,8 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     }
     return YES;
 }
+
+#pragma mark - 选择器选择下标
 
 - (NSInteger)selectedIndex{
     if (self.selectedObject) {
@@ -1468,9 +1489,13 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     return [[self.pickerViewArray objectAtIndex:0] integerValue];
 }
 
+#pragma mark - 选择器默认选中对象
+
 - (id)selectedObject{
     return _options[ZNKDefaultSelectedObject];
 }
+
+#pragma mark - 选择器字体字号
 
 - (UIFont *)pickerViewFont{
     if (_options[ZNKPickerViewFont] && [_options[ZNKPickerViewFont] isKindOfClass:[UIFont class]]) {
@@ -1478,6 +1503,8 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     }
     return [UIFont systemFontOfSize:14];
 }
+
+#pragma mark - 选择器字体停靠
 
 - (NSInteger)pickerViewTextAlignment{
     NSNumber *textAlignment = [[NSNumber alloc] init];
@@ -1489,6 +1516,8 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     return 1;
 }
 
+#pragma mark - 选择器字体颜色
+
 - (UIColor *)pickerViewTextColor{
     if (_options[ZNKPickerViewTitleColor] && [_options[ZNKPickerViewTitleColor] isKindOfClass:[UIColor class]]) {
         return ((UIColor *)_options[ZNKPickerViewTitleColor]);
@@ -1496,15 +1525,17 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     return [UIColor colorFromHexString:@"#E0748E"];
 }
 
+#pragma mark - 选择器背景颜色
+
 - (UIColor *)pickerViewBackgroundColor{
-    UIColor *pickerViewBackgroundColor = _options[ZNKSheetViewBackgroundColor];
+    UIColor *pickerViewBackgroundColor = _options[ZNKPickerViewBackgroundColor];
     if (pickerViewBackgroundColor != nil) {
         return pickerViewBackgroundColor;
     }
     return [UIColor whiteColor];
 }
 
-
+#pragma mark - 选择器取消按钮title
 
 - (NSString *)cancelButtonTitle{
     if (_options[ZNKSheetViewCancelTitle] && [_options[ZNKSheetViewCancelTitle] isKindOfClass:[NSString class]]) {
@@ -1513,6 +1544,7 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     return @"取消";
 }
 
+#pragma mark - 选择器取消按钮
 
 - (UIButton *)cancelButton{
     if (!_cancelButton) {
@@ -1968,13 +2000,13 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
 - (void)set_yearScrollView
 {
     if (_type == ZNKPickerTypeDateTimeMode) {
-        _yearScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.25, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _yearScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.25, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeDateMode) {
-        _yearScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.34, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _yearScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.34, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeYearMonthMode) {
-        _yearScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.5, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _yearScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.5, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeDateHourMinuteMode) {
-        _yearScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.28, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _yearScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.28, CGRectGetHeight(self.pickerContainerView.frame))];
     }
     
     self.curYear = [self setNowTimeShow:0];
@@ -1982,21 +2014,21 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     _yearScrollView.delegate = self;
     _yearScrollView.datasource = self;
     [self setAfterScrollShowView:_yearScrollView andCurrentPage:1];
-    [self.datePickerContainerView addSubview:_yearScrollView];
+    [self.pickerContainerView addSubview:_yearScrollView];
 }
 //设置年月日时分的滚动视图
 - (void)set_monthScrollView
 {
     if (_type == ZNKPickerTypeDateTimeMode) {
-        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.25, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.15, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.25, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.15, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeDateMode) {
-        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.34, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.33, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.34, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.33, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeMonthDayMode) {
-        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.5, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.5, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeYearMonthMode) {
-        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.5, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.5, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.5, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.5, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeDateHourMinuteMode) {
-        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.28, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.18, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _monthScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.28, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.18, CGRectGetHeight(self.pickerContainerView.frame))];
     }
     
     self.curMonth = [self setNowTimeShow:1];
@@ -2004,19 +2036,19 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     _monthScrollView.delegate = self;
     _monthScrollView.datasource = self;
     [self setAfterScrollShowView:_monthScrollView andCurrentPage:1];
-    [self.datePickerContainerView addSubview:_monthScrollView];
+    [self.pickerContainerView addSubview:_monthScrollView];
 }
 //设置年月日时分的滚动视图
 - (void)set_dayScrollView
 {
     if (_type == ZNKPickerTypeDateTimeMode) {
-        _dayScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.40, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.15, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _dayScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.40, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.15, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeDateMode) {
-        _dayScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.67, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.33, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _dayScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.67, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.33, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeMonthDayMode) {
-        _dayScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.5, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.5, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _dayScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.5, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.5, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeDateHourMinuteMode) {
-        _dayScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.46, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.18, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _dayScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.46, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.18, CGRectGetHeight(self.pickerContainerView.frame))];
     }
     
     self.curDay = [self setNowTimeShow:2];
@@ -2024,19 +2056,19 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     _dayScrollView.delegate = self;
     _dayScrollView.datasource = self;
     [self setAfterScrollShowView:_dayScrollView andCurrentPage:1];
-    [self.datePickerContainerView addSubview:_dayScrollView];
+    [self.pickerContainerView addSubview:_dayScrollView];
 }
 //设置年月日时分的滚动视图
 - (void)set_hourScrollView
 {
     if (_type == ZNKPickerTypeDateTimeMode) {
-        _hourScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.55, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.15, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _hourScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.55, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.15, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeTimeMode) {
-        _hourScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.34, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _hourScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.34, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeHourMinuteMode) {
-        _hourScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.5, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _hourScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.5, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeDateHourMinuteMode) {
-        _hourScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.64, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.18, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _hourScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.64, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.18, CGRectGetHeight(self.pickerContainerView.frame))];
     }
     
     self.curHour = [self setNowTimeShow:3];
@@ -2044,19 +2076,19 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     _hourScrollView.delegate = self;
     _hourScrollView.datasource = self;
     [self setAfterScrollShowView:_hourScrollView andCurrentPage:1];
-    [self.datePickerContainerView addSubview:_hourScrollView];
+    [self.pickerContainerView addSubview:_hourScrollView];
 }
 //设置年月日时分的滚动视图
 - (void)set_minuteScrollView
 {
     if (_type == ZNKPickerTypeDateTimeMode) {
-        _minuteScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.70, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.15, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _minuteScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.70, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.15, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeTimeMode) {
-        _minuteScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.34, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.33, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _minuteScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.34, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.33, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeHourMinuteMode) {
-        _minuteScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.5, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.5, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _minuteScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.5, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.5, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeDateHourMinuteMode) {
-        _minuteScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.82, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.18, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _minuteScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.82, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.18, CGRectGetHeight(self.pickerContainerView.frame))];
     }
     
     self.curMin = [self setNowTimeShow:4];
@@ -2064,22 +2096,22 @@ NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
     _minuteScrollView.delegate = self;
     _minuteScrollView.datasource = self;
     [self setAfterScrollShowView:_minuteScrollView andCurrentPage:1];
-    [self.datePickerContainerView addSubview:_minuteScrollView];
+    [self.pickerContainerView addSubview:_minuteScrollView];
 }
 //设置年月日时分的滚动视图
 - (void)set_secondScrollView
 {
     if (_type == ZNKPickerTypeDateTimeMode) {
-        _secondScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.85, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.15, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _secondScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.85, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.15, CGRectGetHeight(self.pickerContainerView.frame))];
     } else if (_type == ZNKPickerTypeTimeMode) {
-        _secondScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.datePickerContainerView.frame)*0.67, 0, CGRectGetWidth(self.datePickerContainerView.frame)*0.33, CGRectGetHeight(self.datePickerContainerView.frame))];
+        _secondScrollView = [[ZNKCycleScrollView alloc] initWithFrame:CGRectMake(CGRectGetWidth(self.pickerContainerView.frame)*0.67, 0, CGRectGetWidth(self.pickerContainerView.frame)*0.33, CGRectGetHeight(self.pickerContainerView.frame))];
     }
     self.curSecond = [self setNowTimeShow:5];
     [_secondScrollView setCurrentSelectPage:(self.curSecond-2)];
     _secondScrollView.delegate = self;
     _secondScrollView.datasource = self;
     [self setAfterScrollShowView:_secondScrollView andCurrentPage:1];
-    [self.datePickerContainerView addSubview:_secondScrollView];
+    [self.pickerContainerView addSubview:_secondScrollView];
 }
 - (void)setAfterScrollShowView:(ZNKCycleScrollView*)scrollview  andCurrentPage:(NSInteger)pageNumber
 {

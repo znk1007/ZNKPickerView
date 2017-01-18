@@ -24,6 +24,8 @@
 extern NSString * const ZNKCoverViewAlpha;
 extern NSString * const ZNKSheetViewBackgroundColor;
 extern NSString * const ZNKSheetViewBackgroundImage;
+extern NSString * const ZNKPickerViewBackgroundColor;
+extern NSString * const ZNKPickerViewBackgroundImage;
 extern NSString * const ZNKPickerViewFont;
 extern NSString * const ZNKSheetViewCancelTitle;
 extern NSString * const ZNKCanScroll;
