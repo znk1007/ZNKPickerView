@@ -968,8 +968,10 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 - (void)initializeForDate{
     [self addSubview:self.sheetView];
     [self.sheetView addSubview:self.toolbarContainerView];
-   
+    [self.toolbarContainerView addSubview:self.pickerToolbar];
+    [self.sheetView addSubview:self.pickerContainerView];
     [self.sheetView addSubview:self.cancelButton];
+    
     
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
@@ -978,14 +980,14 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, [self defaultSheetViewHeight]);
     self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
     
-     [self.toolbarContainerView addSubview:self.pickerToolbar];
+    
     self.pickerToolbar.frame = CGRectMake(10, 0, CGRectGetWidth(self.sheetView.frame) - 20, CGRectGetHeight(self.toolbarContainerView.frame));
     
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
     CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
     CGFloat pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
     
-    [self.sheetView addSubview:self.pickerContainerView];
+    
     self.pickerContainerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
     
     
@@ -1068,7 +1070,7 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     
     CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
     NSInteger arrayCount = self.pickerViewArray.count;
-    CGFloat pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? 3 : arrayCount;
+    CGFloat pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount;
     if (self.canScroll) {
         totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + (self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount) + [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
         pickerViewHeight = self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount;
@@ -1104,7 +1106,60 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     if (!self.pickerViewArray) {
         return;
     }
+    [self addSubview:self.sheetView];
+    [self.sheetView addSubview:self.titleLabel];
+    [self.sheetView addSubview:self.messageLabel];
+    [self.sheetView addSubview:self.cancelButton];
+    [self.sheetView addSubview:self.confirmButton];
+    [self.sheetView addSubview:self.tableView];
+    NSLog(@"screen width %f",znk_screenWidth);
+    NSLog(@"screen height %f", znk_screenHeight);
+    CGFloat titleMaxY = 0;
+    CGFloat titleHeight = 0;
+    if (self.title && ![self.title isEqualToString:@""]) {
+        [self.sheetView addSubview:self.titleLabel];
+        titleMaxY = CGRectGetMaxY(self.titleLabel.frame);
+        titleHeight = CGRectGetHeight(self.titleLabel.frame);
+    }
     
+    CGFloat messageMaxY = 0;
+    CGFloat messageHeight = 0;
+    if (self.message && ![self.message isEqualToString:@""]) {
+        [self.sheetView addSubview:self.messageLabel];
+        messageMaxY = CGRectGetMaxY(self.messageLabel.frame) + [self defaultToolbarPickerMargin];
+        messageHeight = CGRectGetHeight(self.messageLabel.frame);
+    }
+    
+    CGFloat totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.tableViewRowHeight + [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
+    
+    CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
+    NSInteger arrayCount = self.pickerViewArray.count;
+    CGFloat pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount;
+    if (self.canScroll) {
+        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + (self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount) + [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
+        pickerViewHeight = self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount;
+        self.tableView.scrollEnabled = YES;
+        self.tableView.showsVerticalScrollIndicator = NO;
+    }else{
+        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.pickerViewArray.count * self.tableViewRowHeight + [self defaultPickerAndCancelButton] + [self defaultToolbarPickerMargin];
+        pickerViewHeight = self.pickerViewArray.count * self.tableViewRowHeight;
+        self.tableView.scrollEnabled = NO;
+        if (totalViewHeight > znk_screenHeight - znk_navigationBarHeight) {
+            totalViewHeight = znk_screenHeight - znk_navigationBarHeight;
+            pickerViewHeight = totalViewHeight - titleHeight - messageHeight - [self defaultToolbarHeight] - [self defaultPickerAndCancelButton] - [self defaultToolbarPickerMargin];
+            self.tableView.scrollEnabled = YES;
+        }
+    }
+    
+    self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, totalViewHeight);
+    self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - [self defaultToolbarHeight], CGRectGetWidth(self.sheetView.frame) / 2, [self defaultToolbarHeight]);
+    self.confirmButton.frame = CGRectMake(CGRectGetWidth(self.sheetView.frame) / 2, CGRectGetMinY(self.cancelButton.frame), CGRectGetWidth(self.cancelButton.frame), CGRectGetHeight(self.cancelButton.frame));
+    
+    self.tableView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
+    
+    [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
+        self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
+    }];
     
 }
 
