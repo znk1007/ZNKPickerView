@@ -21,6 +21,8 @@
 
 @end
 
+extern NSString * const ZNKToolbarTitle;
+extern NSString * const ZNKToolbarMessage;
 extern NSString * const ZNKCoverViewAlpha;
 extern NSString * const ZNKSheetViewBackgroundColor;
 extern NSString * const ZNKSheetViewBackgroundImage;

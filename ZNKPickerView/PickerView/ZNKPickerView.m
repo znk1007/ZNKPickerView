@@ -649,6 +649,8 @@ NSString * const ZNKToolbarHasInput                 = @"ZNKToolbarHasInput";
 NSString * const ZNKToolbarInputLeftView            = @"ZNKToolbarInputLeftView";
 NSString * const ZNKToolbarInputPlachodler          = @"ZNKToolbarInputPlachodler";
 NSString * const ZNKToolbarBackgroundImage          = @"ZNKToolbarBackgroundImage";
+NSString * const ZNKToolbarTitle                    = @"ZNKToolbarTitle";
+NSString * const ZNKToolbarMessage                  = @"ZNKToolbarMessage";
 NSString * const ZNKConfirmButtonTitle              = @"ZNKConfirmButtonTitle";
 NSString * const ZNKConfirmButtonTitleColor         = @"ZNKConfirmButtonTitleColor";
 
@@ -934,24 +936,25 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 #pragma mark - 单列
 
 - (void)initializeForArray{
-    if (!_pickerViewArray) {
+    if (!self.pickerViewArray) {
         return;
     }
     [self addSubview:self.sheetView];
     [self.sheetView addSubview:self.toolbarContainerView];
+    [self.sheetView addSubview:self.pickerView];
     [self.sheetView addSubview:self.cancelButton];
     
     self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, [self defaultSheetViewHeight]);
     self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
     [self.toolbarContainerView addSubview:self.pickerToolbar];
     
-    self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
-    CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + 1;
+    self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
+    CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
     CGFloat pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
     
-    [self.sheetView addSubview:self.pickerView];
     
-    self.pickerView.layer.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
+    
+    self.pickerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
 
     
     [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
@@ -1109,7 +1112,15 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return [txt boundingRectWithSize:s options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:f]} context:nil];
 }
 
+- (void)formatResult:(NSString *)input selectedIndex:(NSInteger)index selectObject:(id)obj{
+    _index = index;
+    _result = obj;
+    _inputResult = input;
+}
+
 #pragma mark - getter
+
+#pragma mark - 配置项
 
 #pragma mark - 接收数据
 
@@ -1157,18 +1168,6 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return NO;
 }
 
-#pragma mark - 遮罩视图
-
-- (UIButton *)coverView{
-    if (!_coverView) {
-        _coverView = [UIButton buttonWithType:UIButtonTypeCustom];
-        _coverView.frame = _mainView.bounds;
-        _coverView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:self.coverViewAlpha];
-        [_coverView addTarget:self action:@selector(dismissView) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _coverView;
-}
-
 #pragma mark - 遮罩视图透明度
 
 - (CGFloat)coverViewAlpha{
@@ -1176,17 +1175,6 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
         return ((NSNumber *)_options[ZNKCoverViewAlpha]).floatValue;
     }
     return 0.1;
-}
-
-#pragma mark - 弹框视图
-
-- (UIView *)sheetView{
-    if (!_sheetView) {
-        _sheetView = [[UIImageView alloc] initWithFrame:CGRectZero];
-        _sheetView.userInteractionEnabled = YES;
-        _sheetView.backgroundColor = self.sheetViewBackgroundColor;
-    }
-    return _sheetView;
 }
 
 #pragma mark - 工具栏到picker view之间的距离
@@ -1237,19 +1225,6 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
 }
 
-#pragma mark - tool bar / title message 
-
-#pragma mark - 工具栏容器视图
-
-- (UIView *)toolbarContainerView{
-    if (!_toolbarContainerView) {
-        _toolbarContainerView = [[UIImageView alloc] init];
-        _toolbarContainerView.userInteractionEnabled = YES;
-        _toolbarContainerView.backgroundColor = [UIColor whiteColor];
-    }
-    return _toolbarContainerView;
-}
-
 #pragma mark - 工具栏容器视图背景颜色
 
 - (UIColor *)toolbarContainerViewBackgroundColor{
@@ -1266,19 +1241,6 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
         return (UIImage *)_options[ZNKToolbarBackgroundImage];
     }
     return [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
-}
-
-#pragma mark - 工具栏确定按钮
-
-- (UIButton *)confirmButton{
-    if (!_confirmButton) {
-        _confirmButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        _confirmButton.titleLabel.font = [UIFont systemFontOfSize:14];
-        [_confirmButton addTarget:self action:@selector(buttonClick:) forControlEvents:UIControlEventTouchUpInside];
-        [_confirmButton setTitle:self.confirmButtonTitle forState:UIControlStateNormal];
-        [_confirmButton setTitleColor:self.confirmButtonTitleColor forState:UIControlStateNormal];
-    }
-    return _confirmButton;
 }
 
 #pragma mark - 工具栏确定按钮title
@@ -1298,6 +1260,296 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     }
     return [UIColor colorFromHexString:@"#E0748E"];
 }
+
+#pragma mark - 输入框左侧视图
+
+- (UIView *)inputLeftView{
+    if (_options[ZNKToolbarInputLeftView] && [_options[ZNKToolbarInputLeftView] isKindOfClass:[UIView class]]) {
+        return (UIView *)_options[ZNKToolbarInputLeftView];
+    }
+    if (!_inputLeftView) {
+        UILabel *leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 40, [self defaultToolbarHeight])];
+        leftLabel.text = @"备注:";
+        leftLabel.font = [UIFont systemFontOfSize:15];
+        leftLabel.textAlignment = NSTextAlignmentCenter;
+        leftLabel.adjustsFontSizeToFitWidth = YES;
+        _inputLeftView = leftLabel;
+    }
+    return _inputLeftView;
+}
+
+#pragma mark - 占位
+
+- (NSString *)placehodler{
+    if (_options[ZNKToolbarInputPlachodler] && [_options[ZNKToolbarInputPlachodler] isKindOfClass:[NSString class]]) {
+        return (NSString *)_options[ZNKToolbarInputPlachodler];
+    }
+    return @"请输入...";
+}
+
+#pragma mark - 旧内容
+
+- (NSString *)oldInputString{
+    return self.placehodler;
+}
+
+#pragma mark - 选择器背景颜色
+
+- (UIColor *)pickerBackgroundColor{
+    if (_options[ZNKPickerViewBackgroundColor] && [_options[ZNKPickerViewBackgroundColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKPickerViewBackgroundColor];
+    }
+    return [UIColor whiteColor];
+}
+
+#pragma mark - 选择器背景图片
+
+- (UIImage *)pickerBackgroundImage{
+    if (_options[ZNKPickerViewBackgroundImage] && [_options[ZNKPickerViewBackgroundImage] isKindOfClass:[UIImage class]]) {
+        return (UIImage *)_options[ZNKPickerViewBackgroundImage];
+    }
+    if (!_pickerBackgroundImage) {
+        _pickerBackgroundImage = [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
+    }
+    return _pickerBackgroundImage;
+}
+
+#pragma mark - 日期选择器默认日期
+
+- (NSDate *)defaultDate{
+    if (_options[ZNKDefaultSelectedObject] && [_options[ZNKDefaultSelectedObject] isKindOfClass:[NSDate class]]) {
+        return _options[ZNKDefaultSelectedObject];
+    }
+    return [NSDate date];
+}
+
+#pragma mark - 表格选择器是否可以滚动
+
+- (BOOL)canScroll{
+    if (_options[ZNKCanScroll] && [_options[ZNKCanScroll] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKCanScroll]).boolValue;
+    }
+    return NO;
+}
+
+#pragma mark - 表格选择器是否显示滚动条
+
+- (BOOL)verticalScrollIndicator{
+    if (_options[ZNKVerticalScrollIndicator] && [_options[ZNKVerticalScrollIndicator] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKVerticalScrollIndicator]).boolValue;
+    }
+    return YES;
+}
+
+#pragma mark - 表格选择器高度
+
+- (CGFloat)tableViewRowHeight{
+    if ([_options[ZNKTableRowHeight] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKTableRowHeight]).floatValue;
+    }
+    return 45.0;
+}
+
+#pragma mark - 日期选择器选中警示
+
+- (BOOL)pickerViewShowsSelectionIndicator{
+    if (_options[ZNKShowsSelectionIndicator] && [_options[ZNKShowsSelectionIndicator] isKindOfClass:[NSNumber class]]) {
+        return [((NSNumber *)_options[ZNKShowsSelectionIndicator]) boolValue];
+    }
+    return YES;
+}
+
+#pragma mark - 选择器选择下标
+
+- (NSInteger)selectedIndex{
+    if (self.selectedObject) {
+        if ([self.pickerViewArray indexOfObject:self.selectedObject] > 0 && [self.pickerViewArray indexOfObject:self.selectedObject] < self.pickerViewArray.count) {
+            NSInteger index = [self.pickerViewArray indexOfObject:self.selectedObject];
+            [self formatResult:@"" selectedIndex:index selectObject:self.selectedObject];
+            return index;
+        }
+        return 0;
+    }
+    return [[self.pickerViewArray objectAtIndex:0] integerValue];
+}
+
+#pragma mark - 选择器默认选中对象
+
+- (id)selectedObject{
+    return _options[ZNKDefaultSelectedObject];
+}
+
+#pragma mark - 选择器字体字号
+
+- (UIFont *)pickerViewFont{
+    if (_options[ZNKPickerViewFont] && [_options[ZNKPickerViewFont] isKindOfClass:[UIFont class]]) {
+        return (UIFont *)_options[ZNKPickerViewFont];
+    }
+    return [UIFont systemFontOfSize:14];
+}
+
+#pragma mark - 选择器字体停靠
+
+- (NSInteger)pickerViewTextAlignment{
+    if ( _options[ZNKTextAlignment] && [ _options[ZNKTextAlignment] isKindOfClass:[NSNumber class]]) {
+        return [(NSNumber *)_options[ZNKTextAlignment] integerValue];
+    }
+    return 1;
+}
+
+#pragma mark - 选择器字体颜色
+
+- (UIColor *)pickerViewTextColor{
+    if (_options[ZNKPickerViewTitleColor] && [_options[ZNKPickerViewTitleColor] isKindOfClass:[UIColor class]]) {
+        return ((UIColor *)_options[ZNKPickerViewTitleColor]);
+    }
+    return [UIColor colorFromHexString:@"#E0748E"];
+}
+
+#pragma mark - 选择器背景颜色
+
+- (UIColor *)pickerViewBackgroundColor{
+    if (_options[ZNKPickerViewBackgroundColor] && [_options[ZNKPickerViewBackgroundColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKPickerViewBackgroundColor];
+    }
+    return [UIColor whiteColor];
+}
+
+#pragma mark - 选择器取消按钮title
+
+- (NSString *)cancelButtonTitle{
+    if (_options[ZNKSheetViewCancelTitle] && [_options[ZNKSheetViewCancelTitle] isKindOfClass:[NSString class]]) {
+        return (NSString *)_options[ZNKSheetViewCancelTitle];
+    }
+    return @"取消";
+}
+
+#pragma mark - title frame
+
+- (CGRect)titleRect{
+    if (![self.title isEqualToString:@""] && self.tableView) {
+        CGRect titleR = [self textRect:self.title size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
+        return CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(titleR) > self.tableViewRowHeight ? CGRectGetHeight(titleR) : self.tableViewRowHeight);
+    }
+    return CGRectZero;
+}
+
+#pragma mark - message frame
+
+- (CGRect)messageRect{
+    if (![self.message isEqualToString:@""] && self.tableView) {
+        CGRect messageR = [self textRect:self.message size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
+        return CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame), CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageR) > self.tableViewRowHeight ? CGRectGetHeight(messageR) : self.tableViewRowHeight);
+    }
+    return CGRectZero;
+}
+
+#pragma mark - 显示title
+
+- (NSString *)title{
+    
+    if (_options[ZNKToolbarTitle] && [_options[ZNKToolbarTitle] isKindOfClass:[NSString class]]) {
+        NSString *actionTitle = (NSString *)_options[ZNKToolbarTitle];
+        if (self.titleLabel && self.tableView) {
+            CGRect titleRect = [self textRect:actionTitle size:CGSizeMake(CGRectGetWidth(self.tableView.frame), self.tableViewRowHeight) fontSize:17];
+            self.titleLabel.text = actionTitle;
+            self.titleLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(titleRect) > self.tableViewRowHeight ? CGRectGetHeight(titleRect) : self.tableViewRowHeight);
+        }
+        return actionTitle;
+    }
+    return @"";
+}
+
+- (NSString *)message{
+    if (_options[ZNKToolbarMessage] && [_options[ZNKToolbarMessage] isKindOfClass:[NSString class]]) {
+        NSString *actionMessage = (NSString *)_options[ZNKToolbarMessage];
+        if (self.messageLabel && self.tableView) {
+            CGRect messageRect = [self textRect:actionMessage size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
+            self.messageLabel.text = actionMessage;
+            self.messageLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageRect) > self.tableViewRowHeight ? CGRectGetHeight(messageRect) : self.tableViewRowHeight);
+            self.messageLabel.font = [UIFont systemFontOfSize:15];
+        }
+        return actionMessage;
+    }
+    return @"";
+}
+
+#pragma mark - setting
+
+#pragma mark - 选择日期
+
+- (void)setDateTimeStr:(NSString *)dateTimeStr{
+    _dateTimeStr = dateTimeStr;
+    if (_ZNKPickerRealTimeResult) {
+        _result = _dateTimeStr;
+        NSString *input = @"";
+        if (self.inputTextField) {
+            input = self.inputTextField.text;
+        }
+        [self formatResult:input selectedIndex:0 selectObject:_dateTimeStr];
+        _ZNKPickerRealTimeResult(self);
+    }
+}
+
+
+#pragma mark - 控件
+
+#pragma mark - 遮罩视图
+
+- (UIButton *)coverView{
+    if (!_coverView) {
+        _coverView = [UIButton buttonWithType:UIButtonTypeCustom];
+        _coverView.frame = _mainView.bounds;
+        _coverView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:self.coverViewAlpha];
+        [_coverView addTarget:self action:@selector(dismissView) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _coverView;
+}
+
+
+
+#pragma mark - 弹框视图
+
+- (UIView *)sheetView{
+    if (!_sheetView) {
+        _sheetView = [[UIImageView alloc] initWithFrame:CGRectZero];
+        _sheetView.userInteractionEnabled = YES;
+        _sheetView.backgroundColor = self.sheetViewBackgroundColor;
+    }
+    return _sheetView;
+}
+
+
+
+#pragma mark - tool bar / title message 
+
+#pragma mark - 工具栏容器视图
+
+- (UIView *)toolbarContainerView{
+    if (!_toolbarContainerView) {
+        _toolbarContainerView = [[UIImageView alloc] init];
+        _toolbarContainerView.userInteractionEnabled = YES;
+        _toolbarContainerView.backgroundColor = [UIColor whiteColor];
+    }
+    return _toolbarContainerView;
+}
+
+
+
+#pragma mark - 工具栏确定按钮
+
+- (UIButton *)confirmButton{
+    if (!_confirmButton) {
+        _confirmButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        _confirmButton.titleLabel.font = [UIFont systemFontOfSize:14];
+        [_confirmButton addTarget:self action:@selector(buttonClick:) forControlEvents:UIControlEventTouchUpInside];
+        [_confirmButton setTitle:self.confirmButtonTitle forState:UIControlStateNormal];
+        [_confirmButton setTitleColor:self.confirmButtonTitleColor forState:UIControlStateNormal];
+    }
+    return _confirmButton;
+}
+
+
 
 #pragma mark - 工具栏占空符
 
@@ -1323,42 +1575,12 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
         _inputTextField.leftViewMode = UITextFieldViewModeAlways;
         _inputTextField.delegate = self;
         _inputTextField.placeholder = self.placehodler;
-//        _inputTextField.text = _inputString;
+        _inputTextField.clearButtonMode = UITextFieldViewModeUnlessEditing;
     }
     return _inputTextField;
 }
 
-#pragma mark - 输入框左侧视图
 
-- (UIView *)inputLeftView{
-    if (_options[ZNKToolbarInputLeftView] && [_options[ZNKToolbarInputLeftView] isKindOfClass:[UIView class]]) {
-        return (UIView *)_options[ZNKToolbarInputLeftView];
-    }
-    if (!_inputLeftView) {
-        UILabel *leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 40, CGRectGetHeight(self.inputTextField.frame))];
-        leftLabel.text = @"备注:";
-        leftLabel.font = [UIFont systemFontOfSize:15];
-        leftLabel.textAlignment = NSTextAlignmentCenter;
-        leftLabel.adjustsFontSizeToFitWidth = YES;
-        _inputLeftView = leftLabel;
-    }
-    return _inputLeftView;
-}
-
-#pragma mark - 占位
-
-- (NSString *)placehodler{
-    if (_options[ZNKToolbarInputPlachodler] && [_options[ZNKToolbarInputPlachodler] isKindOfClass:[NSString class]]) {
-        return (NSString *)_options[ZNKToolbarInputPlachodler];
-    }
-    return @"请输入...";
-}
-
-#pragma mark - 旧内容
-
-- (NSString *)oldInputString{
-    return self.placehodler;
-}
 
 #pragma mark - 工具栏
 
@@ -1381,9 +1603,8 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return _pickerToolbar;
 }
 
-#pragma mark - Private
 
-#pragma mark - 日期选择器
+#pragma mark - 选择器容器
 
 - (UIImageView *)pickerContainerView{
     if (!_pickerContainerView) {
@@ -1395,64 +1616,9 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return _pickerContainerView;
 }
 
-#pragma mark - 日期选择器背景颜色
 
-- (UIColor *)pickerBackgroundColor{
-    if (_options[ZNKPickerViewBackgroundColor] && [_options[ZNKPickerViewBackgroundColor] isKindOfClass:[UIColor class]]) {
-        return (UIColor *)_options[ZNKPickerViewBackgroundColor];
-    }
-    return [UIColor whiteColor];
-}
 
-#pragma mark - 日期选择器背景图片
-
-- (UIImage *)pickerBackgroundImage{
-    if (_options[ZNKPickerViewBackgroundImage] && [_options[ZNKPickerViewBackgroundImage] isKindOfClass:[UIImage class]]) {
-        return (UIImage *)_options[ZNKPickerViewBackgroundImage];
-    }
-    if (!_pickerBackgroundImage) {
-        _pickerBackgroundImage = [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
-    }
-    return _pickerBackgroundImage;
-}
-
-#pragma mark - 日期选择器默认日期
-
-- (NSDate *)defaultDate{
-    if (_options[ZNKDefaultSelectedObject] && [_options[ZNKDefaultSelectedObject] isKindOfClass:[NSDate class]]) {
-        return _options[ZNKDefaultSelectedObject];
-    }
-    return [NSDate date];
-}
-
-#pragma mark - 日期选择器是否可以滚动
-
-- (BOOL)canScroll{
-    if (_options[ZNKCanScroll] && [_options[ZNKCanScroll] isKindOfClass:[NSNumber class]]) {
-        return ((NSNumber *)_options[ZNKCanScroll]).boolValue;
-    }
-    return NO;
-}
-
-#pragma mark - 日期选择器是否显示滚动条
-
-- (BOOL)verticalScrollIndicator{
-    if (_options[ZNKVerticalScrollIndicator] && [_options[ZNKVerticalScrollIndicator] isKindOfClass:[NSNumber class]]) {
-        return ((NSNumber *)_options[ZNKVerticalScrollIndicator]).boolValue;
-    }
-    return YES;
-}
-
-#pragma mark - 日期选择器表格高度
-
-- (CGFloat)tableViewRowHeight{
-    if ([_options[ZNKTableRowHeight] isKindOfClass:[NSNumber class]]) {
-        return ((NSNumber *)_options[ZNKTableRowHeight]).floatValue;
-    }
-    return 45.0;
-}
-
-#pragma mark - 日期选择器
+#pragma mark - 表格选择器
 
 - (UITableView *)tableView{
     if (!_tableView) {
@@ -1465,83 +1631,6 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
         _tableView.layoutMargins = UIEdgeInsetsZero;
     }
     return _tableView;
-}
-
-#pragma mark - 日期选择器选中警示
-
-- (BOOL)pickerViewShowsSelectionIndicator{
-    if (_options[ZNKShowsSelectionIndicator] && [_options[ZNKShowsSelectionIndicator] isKindOfClass:[NSNumber class]]) {
-        return [((NSNumber *)_options[ZNKShowsSelectionIndicator]) boolValue];
-    }
-    return YES;
-}
-
-#pragma mark - 选择器选择下标
-
-- (NSInteger)selectedIndex{
-    if (self.selectedObject) {
-        if ([self.pickerViewArray indexOfObject:self.selectedObject] > 0 && [_pickerViewArray indexOfObject:self.selectedObject] < _pickerViewArray.count) {
-            _result = self.selectedObject;
-            return [self.pickerViewArray indexOfObject:self.selectedObject];
-        }
-        return 0;
-    }
-    return [[self.pickerViewArray objectAtIndex:0] integerValue];
-}
-
-#pragma mark - 选择器默认选中对象
-
-- (id)selectedObject{
-    return _options[ZNKDefaultSelectedObject];
-}
-
-#pragma mark - 选择器字体字号
-
-- (UIFont *)pickerViewFont{
-    if (_options[ZNKPickerViewFont] && [_options[ZNKPickerViewFont] isKindOfClass:[UIFont class]]) {
-        return (UIFont *)_options[ZNKPickerViewFont];
-    }
-    return [UIFont systemFontOfSize:14];
-}
-
-#pragma mark - 选择器字体停靠
-
-- (NSInteger)pickerViewTextAlignment{
-    NSNumber *textAlignment = [[NSNumber alloc] init];
-    textAlignment = _options[ZNKTextAlignment];
-    
-    if (textAlignment != nil) {
-        return [_options[ZNKTextAlignment] integerValue];
-    }
-    return 1;
-}
-
-#pragma mark - 选择器字体颜色
-
-- (UIColor *)pickerViewTextColor{
-    if (_options[ZNKPickerViewTitleColor] && [_options[ZNKPickerViewTitleColor] isKindOfClass:[UIColor class]]) {
-        return ((UIColor *)_options[ZNKPickerViewTitleColor]);
-    }
-    return [UIColor colorFromHexString:@"#E0748E"];
-}
-
-#pragma mark - 选择器背景颜色
-
-- (UIColor *)pickerViewBackgroundColor{
-    UIColor *pickerViewBackgroundColor = _options[ZNKPickerViewBackgroundColor];
-    if (pickerViewBackgroundColor != nil) {
-        return pickerViewBackgroundColor;
-    }
-    return [UIColor whiteColor];
-}
-
-#pragma mark - 选择器取消按钮title
-
-- (NSString *)cancelButtonTitle{
-    if (_options[ZNKSheetViewCancelTitle] && [_options[ZNKSheetViewCancelTitle] isKindOfClass:[NSString class]]) {
-        return (NSString *)_options[ZNKSheetViewCancelTitle];
-    }
-    return @"取消";
 }
 
 #pragma mark - 选择器取消按钮
@@ -1557,24 +1646,7 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return _cancelButton;
 }
 
-
-//- (UILabel *)dateSepratorLabel{
-//    if (!_dateSepratorLabel) {
-//        _dateSepratorLabel = [[UILabel alloc] init];
-//        _dateSepratorLabel.text = @":";
-//        _dateSepratorLabel.font = [UIFont systemFontOfSize:20];
-//        _dateSepratorLabel.textColor = self.pickerViewTextColor;
-//        if (_textColor) {
-//            _dateSepratorLabel.textColor = _textColor;
-//        }else{
-//            _dateSepratorLabel.textColor = [UIColor colorFromHexString:@"#B95561"];
-//        }
-//        _dateSepratorLabel.textAlignment = NSTextAlignmentCenter;
-//        _dateSepratorLabel.backgroundColor = [UIColor clearColor];
-//    }
-//    return _dateSepratorLabel;
-//}
-
+#pragma mark - 选择器
 
 - (UIPickerView *)pickerView{
     if (!_pickerView) {
@@ -1589,13 +1661,7 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return _pickerView;
 }
 
-- (CGRect)titleRect{
-    if (self.title && self.tableView) {
-        CGRect titleR = [self textRect:self.title size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
-        return CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(titleR) > self.tableViewRowHeight ? CGRectGetHeight(titleR) : self.tableViewRowHeight);
-    }
-    return CGRectZero;
-}
+#pragma mark - 提示title label
 
 - (UILabel *)titleLabel{
     if (!_titleLabel) {
@@ -1610,13 +1676,7 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return _titleLabel;
 }
 
-- (CGRect)messageRect{
-    if (self.message && self.tableView) {
-        CGRect messageR = [self textRect:self.message size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
-        return CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame), CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageR) > self.tableViewRowHeight ? CGRectGetHeight(messageR) : self.tableViewRowHeight);
-    }
-    return CGRectZero;
-}
+#pragma mark - 提示message label
 
 - (UILabel *)messageLabel{
     if (!_messageLabel) {
@@ -1629,59 +1689,14 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return _messageLabel;
 }
 
-#pragma mark - setting
-
-#pragma mark - 选择日期
-
-- (void)setDateTimeStr:(NSString *)dateTimeStr{
-    _dateTimeStr = dateTimeStr;
-    if (_ZNKPickerRealTimeResult) {
-        _result = _dateTimeStr;
-        _index = -1;
-        _ZNKPickerRealTimeResult(self);
-    }
-}
-
-- (void)setInputString:(NSString *)inputString{
-    _inputString = inputString;
-    if (_ZNKPickerRealTimeResult) {
-        _index = -1;
-        _inputResult = _inputString;
-        _ZNKPickerRealTimeResult(self);
-    }
-}
-
-
-
-- (void)setTitle:(NSString *)title{
-    _title = title;
-    if (self.titleLabel && self.tableView) {
-        CGRect titleRect = [self textRect:_title size:CGSizeMake(CGRectGetWidth(self.tableView.frame), self.tableViewRowHeight) fontSize:17];
-        self.titleLabel.text = _title;
-        self.titleLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(titleRect) > self.tableViewRowHeight ? CGRectGetHeight(titleRect) : self.tableViewRowHeight);
-    }
-}
-
-
-
-- (void)setMessage:(NSString *)message{
-    _message = message;
-    if (self.messageLabel && self.tableView) {
-        CGRect messageRect = [self textRect:_message size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
-        self.messageLabel.text = _message;
-        self.messageLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageRect) > self.tableViewRowHeight ? CGRectGetHeight(messageRect) : self.tableViewRowHeight);
-        self.messageLabel.font = [UIFont systemFontOfSize:15];
-    }
-}
-
-
-
-
 
 #pragma mark - 事件
 
 - (void)buttonClick:(UIButton *)sender{
-    
+    if (self.inputTextField) {
+        [self.inputTextField resignFirstResponder];
+        _inputResult = self.inputTextField.text;
+    }
     switch (_type) {
         case ZNKPickerTypeObject:
         {
@@ -1692,7 +1707,9 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
             break;
         case ZNKPickerTypeActionSheet:
         {
-            
+            if (_ZNKPickerConfirmResult) {
+                _ZNKPickerConfirmResult(self);
+            }
         }
             break;
         case ZNKPickerTypeActionAlert:
@@ -1736,9 +1753,10 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
             }
             if (_ZNKPickerConfirmResult) {
                 if (self.inputTextField) {
+                    [self formatResult:self.inputTextField.text.length > 0 ? self.inputTextField.text: self.oldInputString selectedIndex:0 selectObject:self.dateTimeStr];
                     _ZNKPickerConfirmResult(self);
                 }else{
-                    _result = _dateTimeStr;
+                    [self formatResult:@"" selectedIndex:0 selectObject:self.dateTimeStr];
                     _ZNKPickerConfirmResult(self);
                 }
             }
@@ -1795,9 +1813,8 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    _result = self.pickerViewArray[indexPath.row];
-    _index = indexPath.row;
     if (_ZNKPickerConfirmResult) {
+        [self formatResult:@"" selectedIndex:indexPath.row selectObject:self.pickerViewArray[indexPath.row]];
         _ZNKPickerConfirmResult(self);
     }
     [self dismissView];
@@ -1806,7 +1823,7 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 #pragma mark - picker view delegate and data source
 
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView{
-    switch (_pickerClass) {
+    switch (self.pickerClass) {
         case 1:
         {
             return 1;
@@ -1823,15 +1840,15 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 }
 
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component{
-    switch (_pickerClass) {
+    switch (self.pickerClass) {
         case 1:
         {
-            return _pickerViewArray.count;
+            return self.pickerViewArray.count;
         }
             break;
         case 2:
         {
-            return _pickerViewArray.count;
+            return self.pickerViewArray.count;
         }
         default:
             break;
@@ -1839,50 +1856,20 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return 0;
 }
 
-//- (NSAttributedString *)pickerView:(UIPickerView *)pickerView attributedTitleForRow:(NSInteger)row forComponent:(NSInteger)component{
-//    switch (_pickerClass) {
-//        case 1:
-//        {
-//            NSString *title = @"";
-//            if (_objectToStringConverter) {
-//                title = _objectToStringConverter(_pickerViewArray[row]);
-//            }else{
-//                title = _pickerViewArray[row];
-//            }
-//            NSMutableAttributedString *attrTitle = [[NSMutableAttributedString alloc] initWithString:title];
-//            if ([_options[ZNKpickerViewTitleColor] isKindOfClass:[UIColor class]]) {
-//                [attrTitle addAttribute:NSForegroundColorAttributeName value:_options[ZNKpickerViewTitleColor] range:NSMakeRange(0, title.length)];
-//            }else{
-//                [attrTitle addAttribute:NSForegroundColorAttributeName value:[UIColor colorFromHexString:@"#E0748E"] range:NSMakeRange(0, title.length)];
-//            }
-//            if ([_options[ZNKpickerViewFont] isKindOfClass:[UIFont class]]) {
-//                [attrTitle addAttribute:NSFontAttributeName value:_options[ZNKpickerViewFont] range:NSMakeRange(0, title.length)];
-//            }else{
-//                [attrTitle addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:12] range:NSMakeRange(0, title.length)];
-//            }
-//            return attrTitle;
-//        }
-//            break;
-//            
-//        default:
-//            break;
-//    }
-//    return nil;
-//}
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component{
-    switch (_pickerClass) {
+    switch (self.pickerClass) {
         case 1:
         {
             if (self.objectToStringConverter == nil) {
-                _result = [_pickerViewArray objectAtIndex:row];
+                
                 if (_ZNKPickerConfirmResult) {
+                    [self formatResult:@"" selectedIndex:row selectObject:[self.pickerViewArray objectAtIndex:row]];
                     _ZNKPickerConfirmResult(self);
-                    _result = [_pickerViewArray objectAtIndex:row];
                 }
             } else{
-                _result = self.objectToStringConverter ([_pickerViewArray objectAtIndex:row]);
                 if (_ZNKPickerConfirmResult) {
+                    [self formatResult:@"" selectedIndex:row selectObject:self.objectToStringConverter ([self.pickerViewArray objectAtIndex:row])];
                     _ZNKPickerConfirmResult(self);
                 }
             }
@@ -1901,7 +1888,7 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
             viewForRow:(NSInteger)row
           forComponent:(NSInteger)component
            reusingView:(UIView *)view {
-    switch (_pickerClass) {
+    switch (self.pickerClass) {
         case 1:
         {
             UIView *customPickerView = view;
@@ -1910,17 +1897,20 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
             
             if (customPickerView==nil) {
                 
-                CGRect frame = CGRectMake(0.0, 0.0, 292.0, 44.0);
+                CGRect frame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame), self.tableViewRowHeight);
                 customPickerView = [[UIView alloc] initWithFrame: frame];
                 
                 
-                CGRect labelFrame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame), 35); // 35 or 44
+                CGRect labelFrame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame), self.tableViewRowHeight); // 35 or 44
                 pickerViewLabel = [[UILabel alloc] initWithFrame:labelFrame];
                 [pickerViewLabel setTag:1];
                 [pickerViewLabel setTextAlignment: self.pickerViewTextAlignment];
                 [pickerViewLabel setBackgroundColor:[UIColor clearColor]];
                 [pickerViewLabel setTextColor:self.pickerViewTextColor];
                 [pickerViewLabel setFont:self.pickerViewFont];
+                [pickerViewLabel setAdjustsFontSizeToFitWidth:YES];
+                [pickerViewLabel setContentScaleFactor:0.5];
+                [pickerViewLabel setNumberOfLines:0];
                 [customPickerView addSubview:pickerViewLabel];
             } else{
                 
@@ -1933,9 +1923,9 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
             }
             
             if (self.objectToStringConverter == nil){
-                [pickerViewLabel setText: [_pickerViewArray objectAtIndex:row]];
+                [pickerViewLabel setText: [self.pickerViewArray objectAtIndex:row]];
             } else{
-                [pickerViewLabel setText:(self.objectToStringConverter ([_pickerViewArray objectAtIndex:row]))];
+                [pickerViewLabel setText:(self.objectToStringConverter ([self.pickerViewArray objectAtIndex:row]))];
             }
             
             return customPickerView;
