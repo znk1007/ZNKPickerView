@@ -636,6 +636,7 @@ NSString * const ZNKSheetViewBackgroundImage        = @"ZNKSheetViewBackgroundIm
 NSString * const ZNKPickerViewData                  = @"ZNKPickerViewData";
 NSString * const ZNKDefaultSelectedObject           = @"ZNKDefaultSelectedObject";
 NSString * const ZNKDefaultHasNavigationBar         = @"ZNKDefaultHasNavigationBar";
+NSString * const ZNKSheetViewCancelTitle           = @"ZNKPickerViewCancelTitle";
 
 NSString * const ZNKToolbarBackgroundColor          = @"ZNKToolbarBackgroundColor";
 NSString * const ZNKToolbarHasInput                 = @"ZNKToolbarHasInput";
@@ -646,21 +647,21 @@ NSString * const ZNKConfirmButtonTitle              = @"ZNKConfirmButtonTitle";
 NSString * const ZNKConfirmButtonTitleColor         = @"ZNKConfirmButtonTitleColor";
 
 NSString * const ZNKCanScroll                       = @"ZNKCanScroll";
+NSString * const ZNKVerticalScrollIndicator         = @"ZNKVerticalScrollIndicator";
 NSString * const ZNKTableRowHeight                  = @"ZNKTableRowHeight";
 NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 
 NSString * const ZNKShowsSelectionIndicator         = @"ZNKShowsSelectionIndicator";
 NSString * const ZNKPickerViewTitleColor            = @"ZNKPickerViewTitleColor";
-NSString * const ZNKpickerViewFont                  = @"ZNKpickerViewFont";
-NSString * const ZNKpickerViewCancelTitle           = @"ZNKpickerViewCancelTitle";
-NSString * const ZNKSheetViewViewBackgroundColor    = @"ZNKSheetViewViewBackgroundColor";
-NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
+NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
+
 
 
 
 
 #define znk_screenWidth [UIScreen mainScreen].bounds.size.width
 #define znk_screenHeight [UIScreen mainScreen].bounds.size.height
+#define znk_navigationBarHeight 64
 
 
 @interface ZNKPickerView ()<UIPickerViewDelegate, UIPickerViewDataSource,ZNKCycleScrollViewDatasource,ZNKCycleScrollViewDelegate, UITextFieldDelegate, UITableViewDelegate,UITableViewDataSource>
@@ -770,8 +771,12 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
 @property (nonatomic, assign) NSInteger curSecond;
 /**默认日期*/
 @property (nonatomic, strong) NSDate *defaultDate;
+
+#pragma mark - ActionSheet/Alert
 /**是否可以滚动*/
 @property (nonatomic, assign) BOOL canScroll;
+/**显示垂直滚动条*/
+@property (nonatomic, assign) BOOL verticalScrollIndicator;
 /** 其他按钮表格 */
 @property (nonatomic, strong) UITableView *tableView;
 /**提示title*/
@@ -787,10 +792,6 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
 
 /**选择器*/
 @property (nonatomic, strong) UIPickerView *pickerView;
-/**选择器高度*/
-@property (nonatomic, assign) CGFloat pickerViewHeight;
-/**选择器y坐标*/
-@property (nonatomic, assign) CGFloat pickerViewMinY;
 /**文字停靠*/
 @property (nonatomic, assign) NSInteger pickerViewTextAlignment;
 /**文字颜色*/
@@ -944,10 +945,13 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
     [self.toolbarContainerView addSubview:self.pickerToolbar];
     
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
-    _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + 1;
-    _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
+    CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + 1;
+    CGFloat pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
     
     [self.sheetView addSubview:self.pickerView];
+    
+    self.pickerView.layer.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
+
     
     [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
@@ -974,11 +978,11 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
     self.pickerToolbar.frame = CGRectMake(10, 0, CGRectGetWidth(self.sheetView.frame) - 20, CGRectGetHeight(self.toolbarContainerView.frame));
     
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
-    _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
-    _pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
+    CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
+    CGFloat pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
     
     [self.sheetView addSubview:self.datePickerContainerView];
-    self.datePickerContainerView.frame = CGRectMake(0, _pickerViewMinY, CGRectGetWidth(self.sheetView.frame), _pickerViewHeight);
+    self.datePickerContainerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
     
     
     if (_type == ZNKPickerTypeDateMode) {
@@ -1056,31 +1060,39 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
         messageHeight = CGRectGetHeight(self.messageLabel.frame);
     }
     
-    CGFloat totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.tableViewRowHeight * [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
+    CGFloat totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.tableViewRowHeight + [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
     
-    _pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
+    CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
     NSInteger arrayCount = self.pickerViewArray.count;
-    _pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? 3 : arrayCount;
+    CGFloat pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? 3 : arrayCount;
     if (self.canScroll) {
-        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.tableViewRowHeight * arrayCount >= 3 ? 3 : arrayCount + [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
-        _pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? 3 : arrayCount;
+        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + (self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount) + [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
+        pickerViewHeight = self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount;
         self.tableView.scrollEnabled = YES;
+        self.tableView.showsVerticalScrollIndicator = NO;
     }else{
-        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.pickerViewArray.count * self.tableViewRowHeight + [self defaultPickerAndCancelButton];
-        _pickerViewHeight = self.pickerViewArray.count * self.tableViewRowHeight;
+        totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.pickerViewArray.count * self.tableViewRowHeight + [self defaultPickerAndCancelButton] + [self defaultToolbarPickerMargin];
+        pickerViewHeight = self.pickerViewArray.count * self.tableViewRowHeight;
         self.tableView.scrollEnabled = NO;
+        if (totalViewHeight > znk_screenHeight - znk_navigationBarHeight) {
+            totalViewHeight = znk_screenHeight - znk_navigationBarHeight;
+            pickerViewHeight = totalViewHeight - titleHeight - messageHeight - [self defaultToolbarHeight] - [self defaultPickerAndCancelButton] - [self defaultToolbarPickerMargin];
+            self.tableView.scrollEnabled = YES;
+        }
     }
     
     self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, totalViewHeight);
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - [self defaultToolbarHeight], CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
     
-    self.tableView.frame = CGRectMake(0, _pickerViewMinY, CGRectGetWidth(self.sheetView.frame), _pickerViewHeight);
+    self.tableView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
     
     [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
     }];
     
 }
+
+
 
 #pragma mark - 类似系统actionalert
 
@@ -1090,6 +1102,10 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
     }
     
     
+}
+
+- (CGRect)textRect:(NSString *)txt size:(CGSize)s fontSize:(CGFloat)f {
+    return [txt boundingRectWithSize:s options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:f]} context:nil];
 }
 
 #pragma mark - getter
@@ -1158,7 +1174,7 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
     if (_options[ZNKCoverViewAlpha] != nil && [_options[ZNKCoverViewAlpha] isKindOfClass:[NSNumber class]]) {
         return ((NSNumber *)_options[ZNKCoverViewAlpha]).floatValue;
     }
-    return 0.3;
+    return 0.1;
 }
 
 #pragma mark - 弹框视图
@@ -1195,8 +1211,8 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
 #pragma mark - 弹框视图背景颜色
 
 - (UIColor *)sheetViewBackgroundColor{
-    if (_options[ZNKSheetViewViewBackgroundColor] != nil && [_options[ZNKSheetViewViewBackgroundColor] isKindOfClass:[UIColor class]]) {
-        return (UIColor *)_options[ZNKSheetViewViewBackgroundColor];
+    if (_options[ZNKSheetViewBackgroundColor] != nil && [_options[ZNKSheetViewBackgroundColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKSheetViewBackgroundColor];
     }
     return [UIColor colorFromHexString:@"#ECE3E6"];
 }
@@ -1398,35 +1414,19 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
     return [NSDate date];
 }
 
-
-
-#pragma mark - setting
-
-#pragma mark - 选择日期
-
-- (void)setDateTimeStr:(NSString *)dateTimeStr{
-    _dateTimeStr = dateTimeStr;
-    if (_ZNKPickerRealTimeResult) {
-        _result = _dateTimeStr;
-        _index = -1;
-        _ZNKPickerRealTimeResult(self);
+- (BOOL)canScroll{
+    if (_options[ZNKCanScroll] && [_options[ZNKCanScroll] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKCanScroll]).boolValue;
     }
+    return NO;
 }
 
-- (void)setInputString:(NSString *)inputString{
-    _inputString = inputString;
-    if (_ZNKPickerRealTimeResult) {
-        _index = -1;
-        _inputResult = _inputString;
-        _ZNKPickerRealTimeResult(self);
+- (BOOL)verticalScrollIndicator{
+    if (_options[ZNKVerticalScrollIndicator] && [_options[ZNKVerticalScrollIndicator] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKVerticalScrollIndicator]).boolValue;
     }
+    return YES;
 }
-
-- (void)setCanScroll:(BOOL)canScroll{
-    _canScroll = canScroll;
-}
-
-
 
 - (CGFloat)tableViewRowHeight{
     if ([_options[ZNKTableRowHeight] isKindOfClass:[NSNumber class]]) {
@@ -1473,10 +1473,8 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
 }
 
 - (UIFont *)pickerViewFont{
-    UIFont *pickerViewFont = [[UIFont alloc] init];
-    pickerViewFont = _options[ZNKpickerViewFont];
-    if (pickerViewFont) {
-        return pickerViewFont;
+    if (_options[ZNKPickerViewFont] && [_options[ZNKPickerViewFont] isKindOfClass:[UIFont class]]) {
+        return (UIFont *)_options[ZNKPickerViewFont];
     }
     return [UIFont systemFontOfSize:14];
 }
@@ -1509,9 +1507,8 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
 
 
 - (NSString *)cancelButtonTitle{
-    NSString *cancelTitle = _options[ZNKpickerViewCancelTitle];
-    if (cancelTitle) {
-        return cancelTitle;
+    if (_options[ZNKSheetViewCancelTitle] && [_options[ZNKSheetViewCancelTitle] isKindOfClass:[NSString class]]) {
+        return (NSString *)_options[ZNKSheetViewCancelTitle];
     }
     return @"取消";
 }
@@ -1553,23 +1550,12 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
         [_pickerView setDelegate:self];
         [_pickerView setDataSource:self];
         _pickerView.backgroundColor = self.pickerViewBackgroundColor;
-        _pickerView.layer.frame = CGRectMake(0, _pickerViewMinY, CGRectGetWidth(self.sheetView.frame), _pickerViewHeight);
         _pickerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [_pickerView setShowsSelectionIndicator: self.pickerViewShowsSelectionIndicator];//YES];
         [_pickerView selectRow:self.selectedIndex inComponent:0 animated:YES];
     }
     return _pickerView;
 }
-
-- (void)setTitle:(NSString *)title{
-    _title = title;
-    if (self.titleLabel && self.tableView) {
-        CGRect titleRect = [self textRect:_title size:CGSizeMake(CGRectGetWidth(self.tableView.frame), self.tableViewRowHeight) fontSize:17];
-        self.titleLabel.text = _title;
-        self.titleLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(titleRect) > self.tableViewRowHeight ? CGRectGetHeight(titleRect) : self.tableViewRowHeight);
-    }
-}
-
 
 - (CGRect)titleRect{
     if (self.title && self.tableView) {
@@ -1592,16 +1578,6 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
     return _titleLabel;
 }
 
-- (void)setMessage:(NSString *)message{
-    _message = message;
-    if (self.messageLabel && self.tableView) {
-        CGRect messageRect = [self textRect:_message size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
-        self.messageLabel.text = _message;
-        self.messageLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageRect) > self.tableViewRowHeight ? CGRectGetHeight(messageRect) : self.tableViewRowHeight);
-        self.messageLabel.font = [UIFont systemFontOfSize:15];
-    }
-}
-
 - (CGRect)messageRect{
     if (self.message && self.tableView) {
         CGRect messageR = [self textRect:self.message size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
@@ -1621,9 +1597,54 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
     return _messageLabel;
 }
 
-- (CGRect)textRect:(NSString *)txt size:(CGSize)s fontSize:(CGFloat)f {
-    return [txt boundingRectWithSize:s options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:f]} context:nil];
+#pragma mark - setting
+
+#pragma mark - 选择日期
+
+- (void)setDateTimeStr:(NSString *)dateTimeStr{
+    _dateTimeStr = dateTimeStr;
+    if (_ZNKPickerRealTimeResult) {
+        _result = _dateTimeStr;
+        _index = -1;
+        _ZNKPickerRealTimeResult(self);
+    }
 }
+
+- (void)setInputString:(NSString *)inputString{
+    _inputString = inputString;
+    if (_ZNKPickerRealTimeResult) {
+        _index = -1;
+        _inputResult = _inputString;
+        _ZNKPickerRealTimeResult(self);
+    }
+}
+
+
+
+- (void)setTitle:(NSString *)title{
+    _title = title;
+    if (self.titleLabel && self.tableView) {
+        CGRect titleRect = [self textRect:_title size:CGSizeMake(CGRectGetWidth(self.tableView.frame), self.tableViewRowHeight) fontSize:17];
+        self.titleLabel.text = _title;
+        self.titleLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(titleRect) > self.tableViewRowHeight ? CGRectGetHeight(titleRect) : self.tableViewRowHeight);
+    }
+}
+
+
+
+- (void)setMessage:(NSString *)message{
+    _message = message;
+    if (self.messageLabel && self.tableView) {
+        CGRect messageRect = [self textRect:_message size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
+        self.messageLabel.text = _message;
+        self.messageLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageRect) > self.tableViewRowHeight ? CGRectGetHeight(messageRect) : self.tableViewRowHeight);
+        self.messageLabel.font = [UIFont systemFontOfSize:15];
+    }
+}
+
+
+
+
 
 #pragma mark - 事件
 
@@ -1726,9 +1747,12 @@ NSString * const ZNKLeftInputViewTitle              = @"ZNKLeftInputViewTitle";
         [obj removeFromSuperview];
     }];
     UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(tableView.frame), self.tableViewRowHeight)];
-    titleLabel.text = self.pickerViewArray[indexPath.row];
+    titleLabel.text = _objectToStringConverter == nil ? [self.pickerViewArray[indexPath.row] isKindOfClass:[NSString class]] ? self.pickerViewArray[indexPath.row] : @"" : _objectToStringConverter(self.pickerViewArray[indexPath.row]);
     titleLabel.textColor = self.pickerViewTextColor;
     titleLabel.textAlignment = NSTextAlignmentCenter;
+    titleLabel.numberOfLines = 0;
+    titleLabel.adjustsFontSizeToFitWidth = YES;
+    titleLabel.contentScaleFactor = 0.5;
     titleLabel.font = [UIFont systemFontOfSize:18];
     [cell.contentView addSubview:titleLabel];
     return cell;

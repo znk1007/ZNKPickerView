@@ -97,7 +97,18 @@
             break;
         case 102:
         {
-            
+            NSDictionary *option = @{ZNKPickerViewData:@[@"从相册选择",@"相机", @6, @[@(YES), @[@"哈哈哈", @"呀呀呀"]], @(987), @"我去", @"hahahahah",@"呵呵呵呵呵",@"咳咳咳咳",@"略略略",@"路啦啦啦啦啦了", @(90),@(100),@(80),@(123),@"卡卡卡",@"擦擦擦"],/* ZNKCanScroll: @(YES)*/};
+            [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeActionSheet options:option objectToStringConverter:^NSString *(id obj) {
+                return [obj description];
+            } realTimeResult:^(ZNKPickerView *pickerView) {
+                NSLog(@"realTimeResult picker view index %ld",(long)pickerView.index);
+                NSLog(@"realTimeResult picker view input %@", pickerView.inputResult);
+                NSLog(@"realTimeResult picker view select result %@",pickerView.result);
+            } completionHandler:^(ZNKPickerView *pickerView) {
+                NSLog(@"completionHandler picker view index %ld",(long)pickerView.index);
+                NSLog(@"completionHandler picker view input %@", pickerView.inputResult);
+                NSLog(@"completionHandler picker view select result %@",pickerView.result);
+            }];
         }
             break;
         case 103:
