@@ -665,11 +665,7 @@ NSString * const ZNKVerticalScrollIndicator         = @"ZNKVerticalScrollIndicat
 NSString * const ZNKTableRowHeight                  = @"ZNKTableRowHeight";
 NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 
-
-
-
-
-
+NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 
 #define znk_screenWidth [UIScreen mainScreen].bounds.size.width
 #define znk_screenHeight [UIScreen mainScreen].bounds.size.height
@@ -845,13 +841,16 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 @property (nonatomic, assign) CGFloat tableViewRowHeight;
 
 #pragma mark - 城市选择器
-/**国家数组*/
+/**国家区域数组*/
 @property (nonatomic, strong) NSArray *countryRegion;
-/**省份数组*/
+/**国家数组*/
 @property (nonatomic, strong) NSArray *stateArray;
+/**省份数组*/
+@property (nonatomic, strong) NSArray *provinceArray;
 /**城市数组*/
 @property (nonatomic, strong) NSArray *cityArray;
-
+/**仅显示中国的城市*/
+@property (nonatomic, assign) BOOL chinaOnly;
 /**选中结果*/
 @property (nonatomic, strong) id result;
 /**实时回调*/
@@ -1516,6 +1515,15 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return _options[ZNKDefaultSelectedObject];
 }
 
+#pragma mark - 仅仅显示中国
+
+- (BOOL)chinaOnly{
+    if (_options[ZNKCityPickerChinaOnly] && [_options[ZNKCityPickerChinaOnly] isKindOfClass:[NSNumber class]]) {
+        return ((NSNumber *)_options[ZNKCityPickerChinaOnly]).boolValue;
+    }
+    return NO;
+}
+
 #pragma mark - 国家列表
 
 - (NSArray *)countryRegion{
@@ -1539,6 +1547,15 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
         });
     }
     return _countryRegion;
+}
+
+- (NSArray *)stateArray{
+    if (!_stateArray) {
+        [self.countryRegion enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+        }];
+    }
+    return _stateArray;
 }
 
 #pragma mark - 选择器字体字号
