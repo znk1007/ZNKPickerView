@@ -843,8 +843,14 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 @property (nonatomic, assign) CGRect messageRect;
 /**表格高度*/
 @property (nonatomic, assign) CGFloat tableViewRowHeight;
-/**总试图高度*/
-@property (nonatomic, assign) CGFloat totalViewHeight;
+
+#pragma mark - 城市选择器
+/**国家数组*/
+@property (nonatomic, strong) NSArray *countryRegion;
+/**省份数组*/
+@property (nonatomic, strong) NSArray *stateArray;
+/**城市数组*/
+@property (nonatomic, strong) NSArray *cityArray;
 
 /**选中结果*/
 @property (nonatomic, strong) id result;
@@ -902,6 +908,7 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 #pragma mark - private
 
 - (void)baseInitialize{
+    NSLog(@"country %@",self.countryRegion);
     switch (_type) {
         case ZNKPickerTypeObject:
         {
@@ -1507,6 +1514,31 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 
 - (id)selectedObject{
     return _options[ZNKDefaultSelectedObject];
+}
+
+#pragma mark - 国家列表
+
+- (NSArray *)countryRegion{
+    if (!_countryRegion) {
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSString *path = [[NSBundle bundleForClass:[ZNKPickerView class]] pathForResource:@"area" ofType:@"json"];
+            NSData *jsonData = [NSData dataWithContentsOfFile:path];
+            id jsonResult = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:nil];
+            if ([jsonResult isKindOfClass:[NSDictionary class]]) {
+                NSDictionary *jsonDict = (NSDictionary *)jsonResult;
+                id location = jsonDict[@"Location"];
+                if ([location isKindOfClass:[NSDictionary class]]) {
+                    NSDictionary *locationDict = (NSDictionary *)location;
+                    id countryArr = (NSArray *)locationDict[@"CountryRegion"];
+                    if ([countryArr isKindOfClass:[NSArray class]]) {
+                        _countryRegion = (NSArray *)countryArr;
+                    }
+                }
+            }
+        });
+    }
+    return _countryRegion;
 }
 
 #pragma mark - 选择器字体字号
