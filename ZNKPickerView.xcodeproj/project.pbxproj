@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		272C62021E30B18800231D35 /* area.plist in Resources */ = {isa = PBXBuildFile; fileRef = 272C62011E30B18800231D35 /* area.plist */; };
 		272C62041E30C33C00231D35 /* area.json in Resources */ = {isa = PBXBuildFile; fileRef = 272C62031E30C33C00231D35 /* area.json */; };
 		27EAC5441E2B72CC00ED81A5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EAC5431E2B72CC00ED81A5 /* main.m */; };
 		27EAC5471E2B72CC00ED81A5 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 27EAC5461E2B72CC00ED81A5 /* AppDelegate.m */; };
@@ -38,7 +37,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		272C62011E30B18800231D35 /* area.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = area.plist; sourceTree = "<group>"; };
 		272C62031E30C33C00231D35 /* area.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = area.json; sourceTree = "<group>"; };
 		27EAC53F1E2B72CC00ED81A5 /* ZNKPickerView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZNKPickerView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		27EAC5431E2B72CC00ED81A5 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -152,7 +150,6 @@
 			isa = PBXGroup;
 			children = (
 				272C62031E30C33C00231D35 /* area.json */,
-				272C62011E30B18800231D35 /* area.plist */,
 				27EAC5761E2B72E700ED81A5 /* ZNKPickerView.h */,
 				27EAC5771E2B72E700ED81A5 /* ZNKPickerView.m */,
 			);
@@ -267,7 +264,6 @@
 			files = (
 				27EAC5521E2B72CC00ED81A5 /* LaunchScreen.storyboard in Resources */,
 				272C62041E30C33C00231D35 /* area.json in Resources */,
-				272C62021E30B18800231D35 /* area.plist in Resources */,
 				27EAC54F1E2B72CC00ED81A5 /* Assets.xcassets in Resources */,
 				27EAC54D1E2B72CC00ED81A5 /* Main.storyboard in Resources */,
 			);
