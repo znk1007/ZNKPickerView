@@ -643,6 +643,8 @@ NSString * const ZNKPickerViewTitleColor            = @"ZNKPickerViewTitleColor"
 NSString * const ZNKPickerViewFont                  = @"ZNKPickerViewFont";
 NSString * const ZNKPickerViewBackgroundColor       = @"ZNKPickerViewBackgroundColor";
 NSString * const ZNKPickerViewBackgroundImage       = @"ZNKPickerViewBackgroundImage";
+NSString * const ZNKPickerViewSeparateDateFormat            = @"ZNKPickerViewSeparateDateFormat";
+NSString * const ZNKPickerViewSeparateTimeFormat            = @"ZNKPickerViewSeparateTimeFormat";
 
 NSString * const ZNKToolbarBackgroundColor          = @"ZNKToolbarBackgroundColor";
 NSString * const ZNKToolbarHasInput                 = @"ZNKToolbarHasInput";
@@ -650,7 +652,11 @@ NSString * const ZNKToolbarInputLeftView            = @"ZNKToolbarInputLeftView"
 NSString * const ZNKToolbarInputPlachodler          = @"ZNKToolbarInputPlachodler";
 NSString * const ZNKToolbarBackgroundImage          = @"ZNKToolbarBackgroundImage";
 NSString * const ZNKToolbarTitle                    = @"ZNKToolbarTitle";
+NSString * const ZNKToolbarTitleColor               = @"ZNKToolbarTitleColor";
+NSString * const ZNKToolbarTitleMaxHeight           = @"ZNKToolbarTitleMaxHeight";
+NSString * const ZNKToolbarMessageMaxHeight         = @"ZNKToolbarMessageMaxHeight";
 NSString * const ZNKToolbarMessage                  = @"ZNKToolbarMessage";
+NSString * const ZNKToolbarMessageColor             = @"ZNKToolbarMessageColor";
 NSString * const ZNKConfirmButtonTitle              = @"ZNKConfirmButtonTitle";
 NSString * const ZNKConfirmButtonTitleColor         = @"ZNKConfirmButtonTitleColor";
 
@@ -695,6 +701,10 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 @property (nonatomic, strong) UIColor *pickerBackgroundColor;
 /**日期选择器背景图片*/
 @property (nonatomic, strong) UIImage *pickerBackgroundImage;
+/**日期格式*/
+@property (nonatomic, copy) NSString *pickerViewDateFormat;
+/**时间格式*/
+@property (nonatomic, copy) NSString *pickerViewTimeFormat;
 #pragma mark - 基本数据属性
 /**配置项*/
 @property (nonatomic, strong) NSDictionary *options;
@@ -793,6 +803,10 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 @property (nonatomic, copy) NSString *message;
 /**提示内容Label*/
 @property (nonatomic, strong) UILabel *messageLabel;
+/**垂直分隔线*/
+@property (nonatomic, strong) UIView *verticalLine;
+/**水平分隔线*/
+@property (nonatomic, strong) UIView *horizontalLine;
 /**选择器*/
 @property (nonatomic, strong) UIPickerView *pickerView;
 /**文字停靠*/
@@ -810,11 +824,13 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 /**是否*/
 @property (nonatomic, assign) BOOL pickerViewShowsSelectionIndicator;
 /**最大年份*/
-@property (nonatomic,assign) NSInteger maxYear;
+@property (nonatomic, assign) NSInteger maxYear;
 /**最小年份*/
-@property (nonatomic,assign) NSInteger minYear;
+@property (nonatomic, assign) NSInteger minYear;
 /**标题颜色*/
-@property (nonatomic,strong) UIColor *titleColor;
+@property (nonatomic, strong) UIColor *titleColor;
+/**message颜色*/
+@property (nonatomic, strong) UIColor *messageColor;
 /**选择部分颜色*/
 @property (nonatomic, strong) UIColor *textColor;
 /**远离选中部分颜色*/
@@ -966,22 +982,17 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 #pragma mark - 日期
 
 - (void)initializeForDate{
-    [self addSubview:self.sheetView];
-    [self.sheetView addSubview:self.toolbarContainerView];
-    [self.toolbarContainerView addSubview:self.pickerToolbar];
-    [self.sheetView addSubview:self.pickerContainerView];
-    [self.sheetView addSubview:self.cancelButton];
     
     
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
-    _dateTimeStr = [dateFormatter stringFromDate:self.defaultDate];
+    [dateFormatter setDateFormat:[NSString stringWithFormat:@"yyyy%@MM%@dd HH%@mm%@ss",self.pickerViewDateFormat,self.pickerViewDateFormat,self.pickerViewTimeFormat,self.pickerViewTimeFormat]];
+    self.dateTimeStr = [dateFormatter stringFromDate:self.defaultDate];
     
     self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, [self defaultSheetViewHeight]);
     self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
     
     
-    self.pickerToolbar.frame = CGRectMake(10, 0, CGRectGetWidth(self.sheetView.frame) - 20, CGRectGetHeight(self.toolbarContainerView.frame));
+    self.pickerToolbar.frame = CGRectMake(10, 0, CGRectGetWidth(self.toolbarContainerView.frame) - 20, CGRectGetHeight(self.toolbarContainerView.frame));
     
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), 44);
     CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
@@ -990,6 +1001,11 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     
     self.pickerContainerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
     
+    [self addSubview:self.sheetView];
+    [self.sheetView addSubview:self.pickerContainerView];
+    [self.sheetView addSubview:self.toolbarContainerView];
+    [self.toolbarContainerView addSubview:self.pickerToolbar];
+    [self.sheetView addSubview:self.cancelButton];
     
     if (_type == ZNKPickerTypeDateMode) {
         [self set_yearScrollView];
@@ -1041,41 +1057,31 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 #pragma mark - 类似系统actionsheet
 
 - (void)initializeForActionSheet{
-    if (!self.pickerViewArray || self.pickerViewArray.count == 0) {
+    
+    if ([self.title isEqualToString:@""] && [self.message isEqualToString:@""] && self.pickerViewArray.count == 0) {
         return;
     }
-    [self addSubview:self.sheetView];
-    [self.sheetView addSubview:self.titleLabel];
-    [self.sheetView addSubview:self.messageLabel];
-    [self.sheetView addSubview:self.cancelButton];
-    [self.sheetView addSubview:self.tableView];
     
-    CGFloat titleMaxY = 0;
     CGFloat titleHeight = 0;
-    if (self.title && ![self.title isEqualToString:@""]) {
-        [self.sheetView addSubview:self.titleLabel];
-        titleMaxY = CGRectGetMaxY(self.titleLabel.frame);
+    if (![self.title isEqualToString:@""]) {
         titleHeight = CGRectGetHeight(self.titleLabel.frame);
     }
     
-    CGFloat messageMaxY = 0;
     CGFloat messageHeight = 0;
-    if (self.message && ![self.message isEqualToString:@""]) {
-        [self.sheetView addSubview:self.messageLabel];
-        messageMaxY = CGRectGetMaxY(self.messageLabel.frame) + [self defaultToolbarPickerMargin];
+    if (![self.message isEqualToString:@""]) {
         messageHeight = CGRectGetHeight(self.messageLabel.frame);
     }
     
     CGFloat totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.tableViewRowHeight + [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
     
-    CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
+    CGFloat pickerViewMinY = titleHeight + messageHeight + [self defaultToolbarPickerMargin];
     NSInteger arrayCount = self.pickerViewArray.count;
     CGFloat pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount;
     if (self.canScroll) {
         totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + (self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount) + [self defaultToolbarPickerMargin] + [self defaultPickerAndCancelButton];
         pickerViewHeight = self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount;
         self.tableView.scrollEnabled = YES;
-        self.tableView.showsVerticalScrollIndicator = NO;
+        self.tableView.showsVerticalScrollIndicator = self.verticalScrollIndicator;
     }else{
         totalViewHeight = [self defaultToolbarHeight] + titleHeight + messageHeight + self.pickerViewArray.count * self.tableViewRowHeight + [self defaultPickerAndCancelButton] + [self defaultToolbarPickerMargin];
         pickerViewHeight = self.pickerViewArray.count * self.tableViewRowHeight;
@@ -1088,9 +1094,17 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     }
     
     self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, totalViewHeight);
+    self.titleLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), CGRectGetHeight(self.titleLabel.frame));
+    self.messageLabel.frame = CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame), CGRectGetWidth(self.sheetView.frame), CGRectGetHeight(self.messageLabel.frame));
     self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - [self defaultToolbarHeight], CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
     
     self.tableView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
+    
+    [self addSubview:self.sheetView];
+    [self.sheetView addSubview:self.titleLabel];
+    [self.sheetView addSubview:self.messageLabel];
+    [self.sheetView addSubview:self.cancelButton];
+    [self.sheetView addSubview:self.tableView];
     
     [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
@@ -1103,69 +1117,55 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 #pragma mark - 类似系统actionalert
 
 - (void)initializeForActionAlert{
-    if (!self.pickerViewArray) {
+    if ([self.title isEqualToString:@""] && [self.message isEqualToString:@""] && self.pickerViewArray.count == 0) {
         return;
     }
-    [self addSubview:self.sheetView];
-    [self.sheetView addSubview:self.titleLabel];
-    [self.sheetView addSubview:self.messageLabel];
-    [self.sheetView addSubview:self.cancelButton];
-//    [self.sheetView addSubview:self.confirmButton];
-    [self.sheetView addSubview:self.tableView];
-    CGFloat titleMaxY = 0;
+    
     CGFloat titleHeight = 0;
-    if (self.title && ![self.title isEqualToString:@""]) {
-        [self.sheetView addSubview:self.titleLabel];
-        titleMaxY = CGRectGetMaxY(self.titleLabel.frame);
+    if (![self.title isEqualToString:@""]) {
         titleHeight = CGRectGetHeight(self.titleLabel.frame);
     }
     
-    CGFloat messageMaxY = 0;
     CGFloat messageHeight = 0;
-    if (self.message && ![self.message isEqualToString:@""]) {
-        [self.sheetView addSubview:self.messageLabel];
-        messageMaxY = CGRectGetMaxY(self.messageLabel.frame) + [self defaultToolbarPickerMargin];
+    if (![self.message isEqualToString:@""]) {
         messageHeight = CGRectGetHeight(self.messageLabel.frame);
     }
+    CGFloat pickerViewMinY = titleHeight + messageHeight + [self defaultToolbarPickerMargin];
+    CGFloat tableHeight = self.pickerViewArray.count * self.tableViewRowHeight > self.tableViewRowHeight * 2 ? self.tableViewRowHeight * 2 : self.pickerViewArray.count * self.tableViewRowHeight - (2 * [self defaultToolbarPickerMargin]);
     
-    CGFloat totalViewHeight = [self defaultButtonHeight] + titleHeight + messageHeight + self.tableViewRowHeight + [self defaultToolbarPickerMargin];
+    CGPoint sheetViewCenter = CGPointMake(znk_screenWidth / 2, znk_screenHeight / 2);
+    CGFloat sheetViewWidth = [self defaultAlertSheetViewWidth];
+    CGFloat sheetViewHeight = titleHeight + messageHeight + tableHeight + 2 * [self defaultToolbarPickerMargin] + [self defaultButtonHeight];
     
-    CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
-    NSInteger arrayCount = self.pickerViewArray.count;
-    CGFloat pickerViewHeight = self.tableViewRowHeight * arrayCount >=3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount;
-    if (self.canScroll) {
-        totalViewHeight = [self defaultButtonHeight] + titleHeight + messageHeight + (self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount) + [self defaultToolbarPickerMargin];
-        pickerViewHeight = self.tableViewRowHeight * arrayCount >= self.tableViewRowHeight * 3 ? self.tableViewRowHeight * 3 : self.tableViewRowHeight * arrayCount;
-        self.tableView.scrollEnabled = YES;
-        self.tableView.showsVerticalScrollIndicator = NO;
-    }else{
-        totalViewHeight = [self defaultButtonHeight] + titleHeight + messageHeight + self.pickerViewArray.count * self.tableViewRowHeight + [self defaultToolbarPickerMargin];
-        pickerViewHeight = self.pickerViewArray.count * self.tableViewRowHeight;
-        self.tableView.scrollEnabled = NO;
-        if (totalViewHeight > znk_screenHeight - znk_navigationBarHeight) {
-            totalViewHeight = znk_screenHeight - znk_navigationBarHeight;
-            pickerViewHeight = totalViewHeight - titleHeight - messageHeight - [self defaultButtonHeight] - [self defaultToolbarPickerMargin];
-            self.tableView.scrollEnabled = YES;
-        }
-    }
     
-    self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, totalViewHeight);
-    self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - [self defaultButtonHeight], CGRectGetWidth(self.sheetView.frame) / 2, [self defaultButtonHeight]);
-    self.confirmButton.frame = CGRectMake(CGRectGetWidth(self.sheetView.frame) / 2, CGRectGetHeight(self.sheetView.frame) - [self defaultButtonHeight], CGRectGetWidth(self.sheetView.frame) / 2, [self defaultButtonHeight]);
+    self.sheetView.frame = CGRectMake(sheetViewCenter.x - sheetViewWidth / 2, sheetViewCenter.y - sheetViewHeight / 2, 0, 0);
+    
+    self.titleLabel.frame = CGRectMake(0, 0, sheetViewWidth, CGRectGetHeight(self.titleLabel.frame));
+    
+    self.messageLabel.frame = CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame), sheetViewWidth, CGRectGetHeight(self.messageLabel.frame));
+    
+    self.tableView.scrollEnabled = YES;
+    self.tableView.frame = CGRectMake(0, pickerViewMinY, sheetViewWidth, tableHeight);
+    
+    self.cancelButton.frame = CGRectMake(0, sheetViewHeight - [self defaultButtonHeight], sheetViewWidth / 2, [self defaultButtonHeight]);
+    self.confirmButton.frame = CGRectMake(CGRectGetMaxX(self.cancelButton.frame), CGRectGetMinY(self.cancelButton.frame), CGRectGetWidth(self.cancelButton.frame), CGRectGetHeight(self.cancelButton.frame));
+    
+    self.verticalLine.frame = CGRectMake(CGRectGetMaxX(self.cancelButton.frame), CGRectGetMinY(self.cancelButton.frame), 0.5, CGRectGetHeight(self.cancelButton.frame));
+    self.horizontalLine.frame = CGRectMake(0, sheetViewWidth / 2, sheetViewWidth, 0.5);
+    
+    [self addSubview:self.sheetView];
+    [self.sheetView addSubview:self.tableView];
+    [self.sheetView addSubview:self.titleLabel];
+    [self.sheetView addSubview:self.messageLabel];
+    [self.sheetView addSubview:self.cancelButton];
     [self.sheetView addSubview:self.confirmButton];
+    [self.sheetView addSubview:self.verticalLine];
+    [self.sheetView addSubview:self.horizontalLine];
     
-    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(CGRectGetMaxX(self.cancelButton.frame), CGRectGetMinY(self.cancelButton.frame), 1, CGRectGetHeight(self.cancelButton.frame))];
-    line.backgroundColor = [UIColor lightGrayColor];
-    [self.sheetView addSubview:line];
-    
-    line = [[UIView alloc] initWithFrame:CGRectMake(0, CGRectGetMinY(self.cancelButton.frame), CGRectGetWidth(self.sheetView.frame), 1)];
-    line.backgroundColor = [UIColor lightGrayColor];
-    [self.sheetView addSubview:line];
-    
-    self.tableView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
     
     [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
-        self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
+//        self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
+        self.sheetView.frame = CGRectMake(sheetViewCenter.x - sheetViewWidth / 2, sheetViewCenter.y - sheetViewHeight / 2, sheetViewWidth, sheetViewHeight);
     }];
     
 }
@@ -1257,10 +1257,16 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return 216.0f;
 }
 
+#pragma mark - 默认sheet view宽度
+
+- (CGFloat)defaultAlertSheetViewWidth{
+    return 250.0f;
+}
+
 #pragma mark - 默认弹出时间
 
 - (CGFloat)defaultSheetViewAnimationDuration{
-    return 0.25f;
+    return 0.25f;//0.25
 }
 
 #pragma mark - 默认工具栏高度
@@ -1273,6 +1279,28 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 
 - (CGFloat)defaultButtonHeight{
     return 30.0f;
+}
+
+#pragma mark - title 最大高度
+
+- (CGFloat)titleMaxHeight{
+    if (_options[ZNKToolbarTitleMaxHeight] && [_options[ZNKToolbarTitleMaxHeight] isKindOfClass:[NSNumber class]]) {
+        CGFloat maxHeight = ((NSNumber *)_options[ZNKToolbarTitleMaxHeight]).floatValue;
+        CGFloat result = maxHeight > 120.0f ? 120.0f : maxHeight;
+        return result;
+    }
+    return 60.0f;
+}
+
+#pragma mark - message 最大高度
+
+- (CGFloat)messageMaxHeight{
+    if (_options[ZNKToolbarMessageMaxHeight] && [_options[ZNKToolbarMessageMaxHeight] isKindOfClass:[NSNumber class]]) {
+        CGFloat maxHeight = ((NSNumber *)_options[ZNKToolbarMessageMaxHeight]).floatValue;
+        CGFloat result = maxHeight > 150.0f ? 150.0f : maxHeight;
+        return result;
+    }
+    return 75.0f;
 }
 
 #pragma mark - 弹框视图背景颜色
@@ -1329,6 +1357,22 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     return [UIColor colorFromHexString:@"#E0748E"];
 }
 
+#pragma mark - title 颜色
+
+- (UIColor *)titleColor{
+    if (_options[ZNKToolbarTitleColor] && [_options[ZNKToolbarTitleColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKToolbarTitleColor];
+    }
+    return [UIColor blackColor];
+}
+
+- (UIColor *)messageColor{
+    if (_options[ZNKToolbarMessageColor] && [_options[ZNKToolbarMessageColor] isKindOfClass:[UIColor class]]) {
+        return (UIColor *)_options[ZNKToolbarMessageColor];
+    }
+    return [UIColor blackColor];
+}
+
 #pragma mark - 输入框左侧视图
 
 - (UIView *)inputLeftView{
@@ -1380,6 +1424,24 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
         _pickerBackgroundImage = [UIImage imageWithColor:[UIColor whiteColor] size:CGSizeMake(1.0f, 1.0f)];
     }
     return _pickerBackgroundImage;
+}
+
+#pragma mark - 日期格式
+
+- (NSString *)pickerViewDateFormat{
+    if (_options[ZNKPickerViewSeparateDateFormat] && [_options[ZNKPickerViewSeparateDateFormat] isKindOfClass:[NSString class]]) {
+        return (NSString *)_options[ZNKPickerViewSeparateDateFormat];
+    }
+    return @"-";
+}
+
+#pragma mark - 时间格式
+
+- (NSString *)pickerViewTimeFormat{
+    if (_options[ZNKPickerViewSeparateTimeFormat] && [_options[ZNKPickerViewSeparateTimeFormat] isKindOfClass:[NSString class]]) {
+        return (NSString *)_options[ZNKPickerViewSeparateTimeFormat];
+    }
+    return @":";
 }
 
 #pragma mark - 日期选择器默认日期
@@ -1495,9 +1557,9 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 #pragma mark - title frame
 
 - (CGRect)titleRect{
-    if (![self.title isEqualToString:@""] && self.tableView) {
-        CGRect titleR = [self textRect:self.title size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
-        return CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(titleR) > self.tableViewRowHeight ? CGRectGetHeight(titleR) : self.tableViewRowHeight);
+    if (![self.title isEqualToString:@""]) {
+        CGRect titleR = [self textRect:self.title size:CGSizeMake(CGRectGetWidth(self.frame), CGRectGetHeight(self.frame)) fontSize:18];
+        return CGRectMake(0, 0, CGRectGetWidth(titleR), CGRectGetHeight(titleR) > self.tableViewRowHeight ? CGRectGetHeight(titleR) > [self titleMaxHeight] ? [self titleMaxHeight] : CGRectGetHeight(titleR) : self.tableViewRowHeight);
     }
     return CGRectZero;
 }
@@ -1505,9 +1567,9 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 #pragma mark - message frame
 
 - (CGRect)messageRect{
-    if (![self.message isEqualToString:@""] && self.tableView) {
-        CGRect messageR = [self textRect:self.message size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
-        return CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame), CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageR) > self.tableViewRowHeight ? CGRectGetHeight(messageR) : self.tableViewRowHeight);
+    if (![self.message isEqualToString:@""]) {
+        CGRect messageR = [self textRect:self.message size:CGSizeMake(CGRectGetWidth(self.frame), CGRectGetHeight(self.frame)) fontSize:13];
+        return CGRectMake(0, CGRectGetMaxY(self.titleLabel.frame), CGRectGetWidth(messageR), CGRectGetHeight(messageR) > self.tableViewRowHeight ? CGRectGetHeight(messageR) > [self messageMaxHeight] ? [self messageMaxHeight] : CGRectGetHeight(messageR) : self.tableViewRowHeight);
     }
     return CGRectZero;
 }
@@ -1517,27 +1579,14 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 - (NSString *)title{
     
     if (_options[ZNKToolbarTitle] && [_options[ZNKToolbarTitle] isKindOfClass:[NSString class]]) {
-        NSString *actionTitle = (NSString *)_options[ZNKToolbarTitle];
-        if (self.titleLabel && self.tableView) {
-            CGRect titleRect = [self textRect:actionTitle size:CGSizeMake(CGRectGetWidth(self.tableView.frame), self.tableViewRowHeight) fontSize:17];
-            self.titleLabel.text = actionTitle;
-            self.titleLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(titleRect) > self.tableViewRowHeight ? CGRectGetHeight(titleRect) : self.tableViewRowHeight);
-        }
-        return actionTitle;
+        return (NSString *)_options[ZNKToolbarTitle];;
     }
     return @"";
 }
 
 - (NSString *)message{
     if (_options[ZNKToolbarMessage] && [_options[ZNKToolbarMessage] isKindOfClass:[NSString class]]) {
-        NSString *actionMessage = (NSString *)_options[ZNKToolbarMessage];
-        if (self.messageLabel && self.tableView) {
-            CGRect messageRect = [self textRect:actionMessage size:CGSizeMake(CGRectGetWidth(self.tableView.frame), CGRectGetHeight(self.frame)) fontSize:17];
-            self.messageLabel.text = actionMessage;
-            self.messageLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.tableView.frame), CGRectGetHeight(messageRect) > self.tableViewRowHeight ? CGRectGetHeight(messageRect) : self.tableViewRowHeight);
-            self.messageLabel.font = [UIFont systemFontOfSize:15];
-        }
-        return actionMessage;
+        return (NSString *)_options[ZNKToolbarMessage];
     }
     return @"";
 }
@@ -1597,7 +1646,8 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     if (!_toolbarContainerView) {
         _toolbarContainerView = [[UIImageView alloc] init];
         _toolbarContainerView.userInteractionEnabled = YES;
-        _toolbarContainerView.backgroundColor = [UIColor whiteColor];
+        _toolbarContainerView.backgroundColor = self.toolbarContainerViewBackgroundColor;
+        _toolbarContainerView.image = self.toolbarContainerViewBackgroundImage;
     }
     return _toolbarContainerView;
 }
@@ -1734,12 +1784,14 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 - (UILabel *)titleLabel{
     if (!_titleLabel) {
         _titleLabel = [[UILabel alloc] initWithFrame:self.titleRect];
-        _titleLabel.font = [UIFont systemFontOfSize:15];
+        _titleLabel.font = [UIFont boldSystemFontOfSize:18];
         _titleLabel.textAlignment = NSTextAlignmentCenter;
         _titleLabel.adjustsFontSizeToFitWidth = YES;
-        _titleLabel.contentScaleFactor = 0.5;
+        _titleLabel.contentScaleFactor = 0.8;
+        _titleLabel.numberOfLines = 0;
         _titleLabel.text = self.title ? self.title : @"";
-        _titleLabel.textColor = [UIColor blackColor];
+        _titleLabel.textColor = self.titleColor;
+        _titleLabel.backgroundColor = self.toolbarContainerViewBackgroundColor;
     }
     return _titleLabel;
 }
@@ -1752,16 +1804,40 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
         _messageLabel.text = self.message ? self.message : @"";
         _messageLabel.textAlignment = NSTextAlignmentCenter;
         _messageLabel.font = [UIFont systemFontOfSize:12];
-        _messageLabel.textColor = [UIColor blackColor];
+        _messageLabel.textColor = self.messageColor;
+        _messageLabel.numberOfLines = 0;
+        _messageLabel.adjustsFontSizeToFitWidth = YES;
+        _messageLabel.contentScaleFactor = 0.5;
+        _messageLabel.backgroundColor = self.toolbarContainerViewBackgroundColor;
+        
     }
     return _messageLabel;
 }
 
+#pragma mark - 垂直分割线
+
+- (UIView *)verticalLine{
+    if (_verticalLine) {
+        _verticalLine = [[UIView alloc] init];
+        _verticalLine.backgroundColor = [UIColor colorFromHexString:@"cccccc"];
+    }
+    return _verticalLine;
+}
+
+#pragma mark - 水平分割线
+
+- (UIView *)horizontalLine{
+    if (_horizontalLine) {
+        _horizontalLine = [[UIView alloc] init];
+        _horizontalLine.backgroundColor = [UIColor colorFromHexString:@"cccccc"];
+    }
+    return _horizontalLine;
+}
 
 #pragma mark - 事件
 
 - (void)buttonClick:(UIButton *)sender{
-    if (self.inputTextField) {
+    if (self.inputTextField && self.hasInput) {
         [self.inputTextField resignFirstResponder];
         _inputResult = self.inputTextField.text;
     }
@@ -1782,7 +1858,9 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
             break;
         case ZNKPickerTypeActionAlert:
         {
-            
+            if (_ZNKPickerConfirmResult) {
+                _ZNKPickerConfirmResult(self);
+            }
         }
             break;
         case ZNKPickerTypeDateMode:
@@ -1795,33 +1873,33 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
         {
             switch (_type) {
                 case ZNKPickerTypeDateMode:
-                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld%@%ld%@%ld",(long)self.curYear, self.pickerViewDateFormat,(long)self.curMonth, self.pickerViewDateFormat,(long)self.curDay];
                     break;
                 case ZNKPickerTypeTimeMode:
-                    self.dateTimeStr = [NSString stringWithFormat:@"%02ld:%02ld:%02ld",(long)self.curHour,(long)self.curMin,(long)self.curSecond];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%02ld%@%02ld%@%02ld",(long)self.curHour, self.pickerViewTimeFormat,(long)self.curMin, self.pickerViewTimeFormat,(long)self.curSecond];
                     break;
                 case ZNKPickerTypeDateTimeMode:
-                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld %02ld:%02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin,(long)self.curSecond];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld%@%ld%@%ld %02ld%@%02ld%@%02ld",(long)self.curYear, self.pickerViewDateFormat,(long)self.curMonth, self.pickerViewDateFormat,(long)self.curDay,(long)self.curHour, self.pickerViewTimeFormat,(long)self.curMin, self.pickerViewTimeFormat,(long)self.curSecond];
                     break;
                 case ZNKPickerTypeMonthDayMode:
-                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld",(long)self.curMonth,(long)self.curDay];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld%@%ld",(long)self.curMonth, self.pickerViewDateFormat,(long)self.curDay];
                     break;
                 case ZNKPickerTypeYearMonthMode:
-                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld",(long)self.curYear,(long)self.curMonth];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld%@%ld",(long)self.curYear, self.pickerViewDateFormat,(long)self.curMonth];
                     break;
                 case ZNKPickerTypeHourMinuteMode:
-                    self.dateTimeStr = [NSString stringWithFormat:@"%02ld:%02ld",(long)self.curHour,(long)self.curMin];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%02ld%@%02ld",(long)self.curHour, self.pickerViewTimeFormat,(long)self.curMin];
                     break;
                 case ZNKPickerTypeDateHourMinuteMode:
-                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld %02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld%@%ld%@%ld %02ld%@%02ld",(long)self.curYear, self.pickerViewDateFormat,(long)self.curMonth, self.pickerViewDateFormat,(long)self.curDay,(long)self.curHour, self.pickerViewTimeFormat,(long)self.curMin];
                     break;
                 default:
-                    self.dateTimeStr = [NSString stringWithFormat:@"%ld-%ld-%ld %02ld:%02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin,(long)self.curSecond];
+                    self.dateTimeStr = [NSString stringWithFormat:@"%ld%@%ld%@%ld %02ld%@%02ld%@%02ld",(long)self.curYear,self.pickerViewDateFormat,(long)self.curMonth, self.pickerViewDateFormat,(long)self.curDay,(long)self.curHour, self.pickerViewTimeFormat,(long)self.curMin, self.pickerViewTimeFormat,(long)self.curSecond];
                     break;
             }
             if (_ZNKPickerConfirmResult) {
-                if (self.inputTextField) {
-                    [self formatResult:self.inputTextField.text.length > 0 ? self.inputTextField.text: self.oldInputString selectedIndex:0 selectObject:self.dateTimeStr];
+                if (self.inputTextField && self.hasInput) {
+                    [self formatResult:(self.inputTextField.text.length > 0) ? self.inputTextField.text: self.oldInputString selectedIndex:0 selectObject:self.dateTimeStr];
                     _ZNKPickerConfirmResult(self);
                 }else{
                     [self formatResult:@"" selectedIndex:0 selectObject:self.dateTimeStr];
@@ -1840,8 +1918,14 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformIdentity;
     } completion:^(BOOL finished) {
+        [self.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            [obj removeFromSuperview];
+        }];
         [self removeFromSuperview];
     }];
+    if (_dismissHandler) {
+        _dismissHandler();
+    }
 }
 
 #pragma mark - 代理
@@ -2408,8 +2492,8 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
     self.curSecond = secondLabel.tag - 1;
     
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
-    NSString *selectTimeString = [NSString stringWithFormat:@"%ld-%02ld-%02ld %02ld:%02ld:%02ld",(long)self.curYear,(long)self.curMonth,(long)self.curDay,(long)self.curHour,(long)self.curMin,(long)self.curSecond];
+    [dateFormatter setDateFormat:[NSString stringWithFormat:@"yyyy%@MM%@dd HH%@mm%@ss", self.pickerViewDateFormat, self.pickerViewDateFormat, self.pickerViewTimeFormat,self.pickerViewTimeFormat]];
+    NSString *selectTimeString = [NSString stringWithFormat:@"%ld%@%02ld%@%02ld %02ld%@%02ld%@%02ld",(long)self.curYear,self.pickerViewDateFormat,(long)self.curMonth,self.pickerViewDateFormat,(long)self.curDay,(long)self.curHour, self.pickerViewTimeFormat,(long)self.curMin, self.pickerViewTimeFormat,(long)self.curSecond];
     self.dateTimeStr = selectTimeString;
     NSDate *selectDate = [dateFormatter dateFromString:selectTimeString];
     NSDate *nowDate = self.defaultDate;

@@ -22,12 +22,17 @@
 @end
 
 extern NSString * const ZNKToolbarTitle;
+extern NSString * const ZNKToolbarTitleColor;
+extern NSString * const ZNKToolbarTitleMaxHeight;
 extern NSString * const ZNKToolbarMessage;
+extern NSString * const ZNKToolbarMessageColor;
 extern NSString * const ZNKCoverViewAlpha;
 extern NSString * const ZNKSheetViewBackgroundColor;
 extern NSString * const ZNKSheetViewBackgroundImage;
 extern NSString * const ZNKPickerViewBackgroundColor;
 extern NSString * const ZNKPickerViewBackgroundImage;
+extern NSString * const ZNKPickerViewSeparateDateFormat;
+extern NSString * const ZNKPickerViewSeparateTimeFormat;
 extern NSString * const ZNKPickerViewFont;
 extern NSString * const ZNKSheetViewCancelTitle;
 extern NSString * const ZNKCanScroll;
@@ -71,6 +76,8 @@ typedef enum : NSUInteger {
 @property (nonatomic, readonly) id result;
 /**选中的下标*/
 @property (nonatomic, readonly) NSInteger index;
+/**视图消息回调*/
+@property (nonatomic, copy) void(^dismissHandler)();
 
 + (void)showInView:(UIView *)view pickerType:(ZNKPickerType)type options:(NSDictionary *)options objectToStringConverter:(NSString *(^)(id))converter  realTimeResult:(void(^)(ZNKPickerView *pickerView))realTimeResult completionHandler:(void(^)(ZNKPickerView *pickerView))completionHandler;
 
