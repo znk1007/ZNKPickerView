@@ -65,7 +65,7 @@ typedef enum : NSUInteger {
     ZNKPickerTypeHourMinuteMode,
     ZNKPickerTypeDateHourMinuteMode,
     ZNKPickerTypeObject,
-    ZNKPickerTypeChinaArea,
+    ZNKPickerTypeArea,
     ZNKPickerTypeActionSheet,
     ZNKPickerTypeActionAlert,
 } ZNKPickerType;
