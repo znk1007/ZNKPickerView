@@ -7,14 +7,206 @@
 //
 
 #import "ZNKPickerView.h"
-#define kScreen_Height [UIScreen mainScreen].bounds.size.height
-#define kScreen_Width [UIScreen mainScreen].bounds.size.width
-#define kScaleFrom_iPhone5_Desgin(_X_) (_X_ * (CGRectGetWidth(self.pickerContainerView.frame)/320))
-#define kTopViewHeight kScaleFrom_iPhone5_Desgin(44)
-#define kTimeBroadcastViewHeight kScaleFrom_iPhone5_Desgin(200)
-#define kDatePickerHeight (0 + CGRectGetHeight(self.pickerContainerView.frame))
-#define kOKBtnTag 101
-#define kCancleBtnTag 100
+
+#define znk_screenWidth [UIScreen mainScreen].bounds.size.width
+#define znk_screenHeight [UIScreen mainScreen].bounds.size.height
+#define znk_navigationBarHeight 64
+
+
+#define LOCATION        @"Location"
+#define COUNTRYREGION   @"CountryRegion"
+#define STATE           @"State"
+#define REGION          @"Region"
+#define CITY            @"City"
+#define CODE            @"-Code"
+#define NAME            @"-Name"
+
+@interface Country : NSObject
+/**国家代码*/
+@property (nonatomic, copy) NSString *code;
+/**国家名称*/
+@property (nonatomic, copy) NSString *name;
+/**省份列表*/
+@property (nonatomic, strong) NSArray *provinceArray;
+@end
+
+@interface Province : NSObject
+/**省份代码*/
+@property (nonatomic, copy) NSString *code;
+/**省份名称*/
+@property (nonatomic, copy) NSString *name;
+/**城市列表*/
+@property (nonatomic, strong) NSArray *cityArray;
+@end
+
+@interface City : NSObject
+/**城市代码*/
+@property (nonatomic, copy) NSString *code;
+/**城市名称*/
+@property (nonatomic, copy) NSString *name;
+/**区域列表*/
+@property (nonatomic, strong) NSArray *regionArray;
+
+@end
+
+@interface Region : NSObject
+/**区域代码*/
+@property (nonatomic, copy) NSString *code;
+/**区域名称*/
+@property (nonatomic, copy) NSString *name;
+@end
+
+@interface CountryManager : NSObject
+
++ (CountryManager *)shareManager:(BOOL)kill;
+
+
+@end
+
+@implementation CountryManager
+
++ (CountryManager *)shareManager:(BOOL)kill{
+    static CountryManager *manager = nil;
+    @synchronized ([self class]) {
+        if (kill) {
+            NSLog(@"kill singleton");
+            manager = nil;
+        }else{
+            if (!manager) {
+                manager = [[CountryManager alloc] init];
+            }
+        }
+    }
+    return manager;
+}
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        NSData *theData = [NSData dataWithContentsOfFile:[self documentPath]];
+        if (theData.length > 0) {
+            
+        }else{
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                NSString *path = [[NSBundle bundleForClass:[ZNKPickerView class]] pathForResource:@"area" ofType:@"json"];
+                NSData *jsonData = [NSData dataWithContentsOfFile:path];
+                id jsonResult = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:nil];
+                if ([jsonResult isKindOfClass:[NSDictionary class]]) {
+                    NSDictionary *jsonDict = (NSDictionary *)jsonResult;
+                    id location = jsonDict[LOCATION];
+                    if ([location isKindOfClass:[NSDictionary class]]) {
+                        NSDictionary *locationDict = (NSDictionary *)location;
+                        id countryArr = (NSArray *)locationDict[COUNTRYREGION];
+                        if ([countryArr isKindOfClass:[NSArray class]]) {
+                            [self archiveData:(NSArray *)countryArr];
+                        }
+                    }
+                }
+            });
+        }
+    }
+    return self;
+}
+
+- (void)archiveData:(NSArray *)countries{
+    NSMutableArray *countryArray = [NSMutableArray array];
+    [countries enumerateObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSLog(@"country obj ==================\n%@",obj);
+        Country *countryModel = [[Country alloc] init];
+        
+        
+        
+        
+        
+        
+        [countryArray addObject:countryModel];
+        NSMutableData *data = [[NSMutableData alloc] init];
+        NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
+        [archiver encodeObject:countryArray forKey:@"CountryManager"];
+        BOOL success = [data writeToFile:[self documentPath] atomically:YES];
+        if (success) {
+            NSLog(@"success");
+        }else{
+            NSLog(@"failed");
+        }
+    }];
+}
+
+- (NSString *)documentPath{
+    NSString *filePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+    return [filePath stringByAppendingPathComponent:@"CountryManager.archive"];
+}
+
+@end
+
+
+
+@implementation Country
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.code = @"";
+        self.name = @"";
+        self.provinceArray = @[];
+    }
+    return self;
+}
+
+@end
+
+
+
+@implementation Province
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.code = @"";
+        self.name = @"";
+        self.cityArray = @[];
+    }
+    return self;
+}
+
+@end
+
+
+
+@implementation City
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.code = @"";
+        self.name = @"";
+        self.regionArray = @[];
+    }
+    return self;
+}
+
+@end
+
+
+
+@implementation Region
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.code = @"";
+        self.name = @"";
+    }
+    return self;
+}
+
+@end
+
 
 @interface KeyboardManager ()
 
@@ -68,7 +260,7 @@
     [UIView animateWithDuration:durationNumber.doubleValue delay:0 options:curveNumber.unsignedIntegerValue animations:^{
         
         CGFloat navHeight = self.hasNav == YES ? 64 : 0;
-        CGFloat keyboardMinY = kScreen_Height - CGRectGetHeight(keyboardFrame);
+        CGFloat keyboardMinY = znk_screenHeight - CGRectGetHeight(keyboardFrame);
         CGFloat targetMinY = CGRectGetMinY(self.containerView.frame) - navHeight + CGRectGetMinY(self.targetView.frame);
         CGFloat targetMaxY = CGRectGetMinY(self.containerView.frame) - navHeight + CGRectGetMaxY(self.targetView.frame) + self.contentOffset;
         if (targetMaxY > keyboardMinY) {
@@ -667,9 +859,6 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 
 NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 
-#define znk_screenWidth [UIScreen mainScreen].bounds.size.width
-#define znk_screenHeight [UIScreen mainScreen].bounds.size.height
-#define znk_navigationBarHeight 64
 
 
 @interface ZNKPickerView ()<UIPickerViewDelegate, UIPickerViewDataSource,ZNKCycleScrollViewDatasource,ZNKCycleScrollViewDelegate, UITextFieldDelegate, UITableViewDelegate,UITableViewDataSource>
@@ -907,7 +1096,9 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 #pragma mark - private
 
 - (void)baseInitialize{
-    NSLog(@"country %@",self.countryRegion);
+//    NSLog(@"country %@",self.countryRegion);
+//    NSLog(@"state %@", self.stateArray);
+    [CountryManager shareManager:NO];
     switch (_type) {
         case ZNKPickerTypeObject:
         {
@@ -945,6 +1136,11 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
         case ZNKPickerTypeActionAlert:
         {
             [self initializeForActionAlert];
+        }
+            break;
+        case ZNKPickerTypeArea:
+        {
+            
         }
             break;
         default:
@@ -1174,6 +1370,13 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
         self.sheetView.frame = CGRectMake(sheetViewCenter.x - sheetViewWidth / 2, sheetViewCenter.y - sheetViewHeight / 2, sheetViewWidth, sheetViewHeight);
     }];
     
+}
+
+- (void)initializeForArea{
+    if (self.countryRegion.count == 0) {
+        return;
+    }
+    NSLog(@"state dict %@",self.stateArray);
 }
 
 - (CGRect)textRect:(NSString *)txt size:(CGSize)s fontSize:(CGFloat)f {
@@ -1528,23 +1731,20 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 
 - (NSArray *)countryRegion{
     if (!_countryRegion) {
-        
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            NSString *path = [[NSBundle bundleForClass:[ZNKPickerView class]] pathForResource:@"area" ofType:@"json"];
-            NSData *jsonData = [NSData dataWithContentsOfFile:path];
-            id jsonResult = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:nil];
-            if ([jsonResult isKindOfClass:[NSDictionary class]]) {
-                NSDictionary *jsonDict = (NSDictionary *)jsonResult;
-                id location = jsonDict[@"Location"];
-                if ([location isKindOfClass:[NSDictionary class]]) {
-                    NSDictionary *locationDict = (NSDictionary *)location;
-                    id countryArr = (NSArray *)locationDict[@"CountryRegion"];
-                    if ([countryArr isKindOfClass:[NSArray class]]) {
-                        _countryRegion = (NSArray *)countryArr;
-                    }
+        NSString *path = [[NSBundle bundleForClass:[ZNKPickerView class]] pathForResource:@"area" ofType:@"json"];
+        NSData *jsonData = [NSData dataWithContentsOfFile:path];
+        id jsonResult = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:nil];
+        if ([jsonResult isKindOfClass:[NSDictionary class]]) {
+            NSDictionary *jsonDict = (NSDictionary *)jsonResult;
+            id location = jsonDict[LOCATION];
+            if ([location isKindOfClass:[NSDictionary class]]) {
+                NSDictionary *locationDict = (NSDictionary *)location;
+                id countryArr = (NSArray *)locationDict[COUNTRYREGION];
+                if ([countryArr isKindOfClass:[NSArray class]]) {
+                    _countryRegion = (NSArray *)countryArr;
                 }
             }
-        });
+        }
     }
     return _countryRegion;
 }
@@ -1552,7 +1752,15 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 - (NSArray *)stateArray{
     if (!_stateArray) {
         [self.countryRegion enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            
+            NSLog(@"country obj %@", obj);
+//            if ([obj isKindOfClass:[NSDictionary class]]) {
+//                NSDictionary * countryDict = (NSDictionary *)obj;
+//                
+//                if (countryDict[STATE] && [countryDict[STATE] isKindOfClass:[NSDictionary class]]) {
+//                    NSDictionary *stateDict = (NSDictionary *)countryDict[STATE];
+//                }
+//                
+//            }
         }];
     }
     return _stateArray;
