@@ -110,6 +110,19 @@
     return self;
 }
 
+- (NSArray *)counties{
+    NSData *theData = [NSData dataWithContentsOfFile:[self documentPath]];
+    if (theData.length > 0) {
+        NSKeyedUnarchiver *unArchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:theData];
+        id result = [unArchiver decodeObjectForKey:@"CountryManager"];
+        if ([result isKindOfClass:[NSArray class]]) {
+            return (NSArray *)result;
+        }
+    }
+    return [NSArray array];
+}
+
+
 - (void)archiveData:(NSArray *)countries{
     NSMutableArray *countryArray = [NSMutableArray array];
     [countries enumerateObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
