@@ -8,6 +8,40 @@
 
 #import <UIKit/UIKit.h>
 
+@interface Country : NSObject<NSCoding>
+/**国家代码*/
+@property (nonatomic, readonly) NSString *code;
+/**国家名称*/
+@property (nonatomic, readonly) NSString *name;
+/**省份列表*/
+@property (nonatomic, readonly) NSArray *provinceArray;
+@end
+
+@interface Province : NSObject<NSCoding>
+/**省份代码*/
+@property (nonatomic, readonly) NSString *code;
+/**省份名称*/
+@property (nonatomic, readonly) NSString *name;
+/**城市列表*/
+@property (nonatomic, readonly) NSArray *cityArray;
+@end
+
+@interface City : NSObject<NSCoding>
+/**城市代码*/
+@property (nonatomic, readonly) NSString *code;
+/**城市名称*/
+@property (nonatomic, readonly) NSString *name;
+/**区域列表*/
+@property (nonatomic, readonly) NSArray *regionArray;
+@end
+
+@interface Region : NSObject<NSCoding>
+/**区域代码*/
+@property (nonatomic, readonly) NSString *code;
+/**区域名称*/
+@property (nonatomic, readonly) NSString *name;
+@end
+
 @interface UIImage (ZNKPickerView)
 
 + (UIImage *)imageWithColor:(UIColor *)color size:(CGSize)size;

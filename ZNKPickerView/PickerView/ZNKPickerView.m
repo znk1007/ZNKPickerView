@@ -21,7 +21,9 @@
 #define CODE            @"-Code"
 #define NAME            @"-Name"
 
-@interface Country : NSObject
+
+
+@interface Country ()<NSCoding>
 /**国家代码*/
 @property (nonatomic, copy) NSString *code;
 /**国家名称*/
@@ -30,7 +32,7 @@
 @property (nonatomic, strong) NSArray *provinceArray;
 @end
 
-@interface Province : NSObject
+@interface Province ()<NSCoding>
 /**省份代码*/
 @property (nonatomic, copy) NSString *code;
 /**省份名称*/
@@ -39,17 +41,16 @@
 @property (nonatomic, strong) NSArray *cityArray;
 @end
 
-@interface City : NSObject
+@interface City ()<NSCoding>
 /**城市代码*/
 @property (nonatomic, copy) NSString *code;
 /**城市名称*/
 @property (nonatomic, copy) NSString *name;
 /**区域列表*/
 @property (nonatomic, strong) NSArray *regionArray;
-
 @end
 
-@interface Region : NSObject
+@interface Region ()<NSCoding>
 /**区域代码*/
 @property (nonatomic, copy) NSString *code;
 /**区域名称*/
@@ -112,25 +113,83 @@
 - (void)archiveData:(NSArray *)countries{
     NSMutableArray *countryArray = [NSMutableArray array];
     [countries enumerateObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        NSLog(@"country obj ==================\n%@",obj);
         Country *countryModel = [[Country alloc] init];
-        
-        
-        
-        
-        
-        
-        [countryArray addObject:countryModel];
-        NSMutableData *data = [[NSMutableData alloc] init];
-        NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
-        [archiver encodeObject:countryArray forKey:@"CountryManager"];
-        BOOL success = [data writeToFile:[self documentPath] atomically:YES];
-        if (success) {
-            NSLog(@"success");
-        }else{
-            NSLog(@"failed");
+        if ([obj isKindOfClass:[NSDictionary class]]) {
+            NSDictionary *countryDict = (NSDictionary *)obj;
+            if (countryDict[CODE] && [countryDict[CODE] isKindOfClass:[NSString class]]) {
+                countryModel.code = (NSString *)countryDict[CODE];
+            }
+            if (countryDict[NAME] && [countryDict[CODE] isKindOfClass:[NSString class]]) {
+                countryModel.name = (NSString *)countryDict[CODE];
+            }
+            
+            if (countryDict[STATE] && [countryDict[STATE] isKindOfClass:[NSArray class]]) {
+                NSMutableArray *stateArray = [NSMutableArray array];
+                NSArray *stateArr = (NSArray *)countryDict[STATE];
+                [stateArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                    if ([obj isKindOfClass:[NSDictionary class]]) {
+                        Province *provinceModel = [[Province alloc] init];
+                        NSDictionary *provinceDict = (NSDictionary *)obj;
+                        if (provinceDict[CODE] && [provinceDict[CODE] isKindOfClass:[NSString class]]) {
+                            provinceModel.code = (NSString *)provinceDict[CODE];
+                        }
+                        if (provinceDict[NAME] && [provinceDict[NAME] isKindOfClass:[NSString class]]) {
+                            provinceModel.name = (NSString *)provinceDict[NAME];
+                        }
+                        if (provinceDict[CITY] && [provinceDict[CITY] isKindOfClass:[NSArray class]]) {
+                            NSArray *cityArr = (NSArray *)provinceDict[CITY];
+                            NSMutableArray *cityArray = [NSMutableArray array];
+                            [cityArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                if ([obj isKindOfClass:[NSDictionary class]]) {
+                                    NSDictionary *cityDict = (NSDictionary *)obj;
+                                    City *cityModel = [[City alloc] init];
+                                    if (cityDict[CODE] && [cityDict[CODE] isKindOfClass:[NSString class]]) {
+                                        cityModel.code = (NSString *)cityDict[CODE];
+                                    }
+                                    if (cityDict[NAME] && [cityDict[NAME] isKindOfClass:[NSString class]]) {
+                                        cityModel.name = (NSString *)cityDict[NAME];
+                                    }
+                                    if (cityDict[REGION] && [cityDict[REGION] isKindOfClass:[NSArray class]]) {
+                                        NSArray *regionArr = (NSArray *)cityDict[REGION];
+                                        NSMutableArray *regionArray = [NSMutableArray array];
+                                        [regionArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                            if ([obj isKindOfClass:[NSDictionary class]]) {
+                                                Region *regionModel = [[Region alloc] init];
+                                                NSDictionary *regionDict = (NSDictionary *)obj;
+                                                if (regionDict[CODE] && [regionDict[CODE] isKindOfClass:[NSString class]]) {
+                                                    regionModel.code = (NSString *)regionDict[CODE];
+                                                }
+                                                if (regionDict[NAME] && [regionDict[NAME] isKindOfClass:[NSString class]]) {
+                                                    regionModel.name = (NSString *)regionDict[NAME];
+                                                }
+                                                [regionArray addObject:regionModel];
+                                            }
+                                        }];
+                                        cityModel.regionArray = [regionArray copy];
+                                    }
+                                    [cityArray addObject:cityModel];
+                                }
+                            }];
+                            provinceModel.cityArray = [cityArray copy];
+                        }
+                        [stateArray addObject:provinceModel];
+                    }
+                }];
+                countryModel.provinceArray = [stateArray copy];
+            }
         }
+        [countryArray addObject:countryModel];
     }];
+    NSMutableData *data = [[NSMutableData alloc] init];
+    NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
+    [archiver encodeObject:countryArray forKey:@"CountryManager"];
+    [archiver finishEncoding];
+    BOOL success = [data writeToFile:[self documentPath] atomically:YES];
+    if (success) {
+        NSLog(@"success");
+    }else{
+        NSLog(@"failed");
+    }
 }
 
 - (NSString *)documentPath{
@@ -155,6 +214,33 @@
     return self;
 }
 
+- (instancetype)initWithCoder:(NSCoder *)coder
+{
+    self = [super init];
+    if (self) {
+        id codeCoder = [coder decodeObjectForKey:@"CountryCode"];
+        if ([codeCoder isKindOfClass:[NSString class]]) {
+            self.code = (NSString *)codeCoder;
+        }
+        id nameCoder = [coder decodeObjectForKey:@"CountryName"];
+        if ([nameCoder isKindOfClass:[NSString class]]) {
+            self.name = (NSString *)nameCoder;
+        }
+        id arrayCoder = [coder decodeObjectForKey:@"CountryArray"];
+        if ([arrayCoder isKindOfClass:[NSArray class]]) {
+            self.provinceArray = (NSArray *)arrayCoder;
+        }
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+    [coder encodeObject:self.code forKey:@"CountryCode"];
+    [coder encodeObject:self.name forKey:@"CountryName"];
+    [coder encodeObject:self.provinceArray forKey:@"CountryArray"];
+}
+
 @end
 
 
@@ -172,8 +258,34 @@
     return self;
 }
 
-@end
+- (instancetype)initWithCoder:(NSCoder *)coder
+{
+    self = [super init];
+    if (self) {
+        id codeCoder = [coder decodeObjectForKey:@"ProvinceCode"];
+        if ([codeCoder isKindOfClass:[NSString class]]) {
+            self.code = (NSString *)codeCoder;
+        }
+        id nameCoder = [coder decodeObjectForKey:@"ProvinceName"];
+        if ([nameCoder isKindOfClass:[NSString class]]) {
+            self.name = (NSString *)nameCoder;
+        }
+        id arrayCoder = [coder decodeObjectForKey:@"ProvinceArray"];
+        if ([arrayCoder isKindOfClass:[NSArray class]]) {
+            self.cityArray = (NSArray *)arrayCoder;
+        }
+    }
+    return self;
+}
 
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+    [coder encodeObject:self.code forKey:@"ProvinceCode"];
+    [coder encodeObject:self.name forKey:@"ProvinceName"];
+    [coder encodeObject:self.cityArray forKey:@"ProvinceArray"];
+}
+
+@end
 
 
 @implementation City
@@ -187,6 +299,33 @@
         self.regionArray = @[];
     }
     return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)coder
+{
+    self = [super init];
+    if (self) {
+        id codeCoder = [coder decodeObjectForKey:@"CityCode"];
+        if ([codeCoder isKindOfClass:[NSString class]]) {
+            self.code = (NSString *)codeCoder;
+        }
+        id nameCoder = [coder decodeObjectForKey:@"CityName"];
+        if ([nameCoder isKindOfClass:[NSString class]]) {
+            self.name = (NSString *)nameCoder;
+        }
+        id arrayCoder = [coder decodeObjectForKey:@"CityArray"];
+        if ([arrayCoder isKindOfClass:[NSArray class]]) {
+            self.regionArray = (NSArray *)arrayCoder;
+        }
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+    [coder encodeObject:self.code forKey:@"CityCode"];
+    [coder encodeObject:self.name forKey:@"CityName"];
+    [coder encodeObject:self.regionArray forKey:@"CityArray"];
 }
 
 @end
@@ -203,6 +342,28 @@
         self.name = @"";
     }
     return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)coder
+{
+    self = [super init];
+    if (self) {
+        id codeCoder = [coder decodeObjectForKey:@"RegionCode"];
+        if ([codeCoder isKindOfClass:[NSString class]]) {
+            self.code = (NSString *)codeCoder;
+        }
+        id nameCoder = [coder decodeObjectForKey:@"RegionName"];
+        if ([nameCoder isKindOfClass:[NSString class]]) {
+            self.name = (NSString *)nameCoder;
+        }
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+    [coder encodeObject:self.code forKey:@"RegionCode"];
+    [coder encodeObject:self.name forKey:@"RegionName"];
 }
 
 @end
