@@ -57,10 +57,9 @@
 @property (nonatomic, copy) NSString *name;
 @end
 
-@interface CountryManager : NSObject
 
-+ (CountryManager *)shareManager:(BOOL)kill;
 
+@interface CountryManager ()
 
 @end
 
@@ -85,32 +84,30 @@
 {
     self = [super init];
     if (self) {
-        NSData *theData = [NSData dataWithContentsOfFile:[self documentPath]];
-        if (theData.length > 0) {
-            
-        }else{
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                NSString *path = [[NSBundle bundleForClass:[ZNKPickerView class]] pathForResource:@"area" ofType:@"json"];
-                NSData *jsonData = [NSData dataWithContentsOfFile:path];
-                id jsonResult = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:nil];
-                if ([jsonResult isKindOfClass:[NSDictionary class]]) {
-                    NSDictionary *jsonDict = (NSDictionary *)jsonResult;
-                    id location = jsonDict[LOCATION];
-                    if ([location isKindOfClass:[NSDictionary class]]) {
-                        NSDictionary *locationDict = (NSDictionary *)location;
-                        id countryArr = (NSArray *)locationDict[COUNTRYREGION];
-                        if ([countryArr isKindOfClass:[NSArray class]]) {
-                            [self archiveData:(NSArray *)countryArr];
-                        }
-                    }
-                }
-            });
-        }
+        [self initilizeWithResult:nil];
     }
     return self;
 }
 
-- (NSArray *)counties{
+- (NSArray *)countries:(void(^)(NSArray *countryArray))completionHandler{
+    NSData *theData = [NSData dataWithContentsOfFile:[self documentPath]];
+    if (theData.length > 0) {
+        NSKeyedUnarchiver *unArchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:theData];
+        id result = [unArchiver decodeObjectForKey:@"CountryManager"];
+        if ([result isKindOfClass:[NSArray class]]) {
+            return (NSArray *)result;
+        }
+    }else{
+        [self initilizeWithResult:^(NSArray *result) {
+            if (completionHandler) {
+                completionHandler(result);
+            }
+        }];
+    }
+    return [NSArray array];
+}
+
+- (NSArray *)countries{
     NSData *theData = [NSData dataWithContentsOfFile:[self documentPath]];
     if (theData.length > 0) {
         NSKeyedUnarchiver *unArchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:theData];
@@ -123,7 +120,76 @@
 }
 
 
-- (void)archiveData:(NSArray *)countries{
+- (NSArray *)provincesForCountry:(Country *)country{
+    NSArray *countryArray = [self countries];
+    __block NSArray *provinceArray = [NSArray array];
+    [countryArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([obj isKindOfClass:[Country class]]) {
+            Country *temp = (Country *)obj;
+            if ([temp.name isEqualToString:country.name]) {
+                provinceArray = temp.provinceArray;
+                *stop = YES;
+            }
+        }
+    }];
+    return provinceArray;
+}
+
+- (NSArray *)citiesForProvince:(Province *)province forCountry:(Country *)country{
+    NSArray *provinceArray = [self provincesForCountry:country];
+    __block NSArray *citiesArray = [NSArray array];
+    [provinceArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([obj isKindOfClass:[Province class]]) {
+            Province *temp = (Province *)obj;
+            if ([temp.name isEqualToString:province.name]) {
+                citiesArray = temp.cityArray;
+                *stop = YES;
+            }
+        }
+    }];
+    return citiesArray;
+}
+
+- (NSArray *)regionsForCities:(City *)city forProvince:(Province *)province forCountry:(Country *)country{
+    NSArray *citiesArray = [self citiesForProvince:province forCountry:country];
+    __block NSArray *regionArray = [NSArray array];
+    [citiesArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([obj isKindOfClass:[City class]]) {
+            City *temp = (City *)obj;
+            if ([temp.name isEqualToString:city.name]) {
+                regionArray = temp.regionArray;
+                *stop = YES;
+            }
+        }
+    }];
+    return regionArray;
+}
+
+- (void)initilizeWithResult:(void(^)(NSArray * result))completionHandler{
+    NSData *theData = [NSData dataWithContentsOfFile:[self documentPath]];
+    if (theData.length > 0) {
+        
+    }else{
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSString *path = [[NSBundle bundleForClass:[ZNKPickerView class]] pathForResource:@"area" ofType:@"json"];
+            NSData *jsonData = [NSData dataWithContentsOfFile:path];
+            id jsonResult = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:nil];
+            if ([jsonResult isKindOfClass:[NSDictionary class]]) {
+                NSDictionary *jsonDict = (NSDictionary *)jsonResult;
+                id location = jsonDict[LOCATION];
+                if ([location isKindOfClass:[NSDictionary class]]) {
+                    NSDictionary *locationDict = (NSDictionary *)location;
+                    id countryArr = (NSArray *)locationDict[COUNTRYREGION];
+                    if ([countryArr isKindOfClass:[NSArray class]]) {
+                        [self archiveData:(NSArray *)countryArr compeltionResult:completionHandler];
+                    }
+                }
+            }
+        });
+    }
+}
+
+- (void)archiveData:(NSArray *)countries compeltionResult:(void(^)(NSArray * result))completionHandler{
     NSMutableArray *countryArray = [NSMutableArray array];
     [countries enumerateObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         Country *countryModel = [[Country alloc] init];
@@ -200,6 +266,9 @@
     BOOL success = [data writeToFile:[self documentPath] atomically:YES];
     if (success) {
         NSLog(@"success");
+        if (completionHandler) {
+            completionHandler(countryArray);
+        }
     }else{
         NSLog(@"failed");
     }
@@ -1033,8 +1102,6 @@ NSString * const ZNKTextAlignment                   = @"ZNKTextAlignment";
 
 NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 
-
-
 @interface ZNKPickerView ()<UIPickerViewDelegate, UIPickerViewDataSource,ZNKCycleScrollViewDatasource,ZNKCycleScrollViewDelegate, UITextFieldDelegate, UITableViewDelegate,UITableViewDataSource>
 
 #pragma mark - 基本UI属性
@@ -1206,14 +1273,10 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 #pragma mark - 城市选择器
 /**国家区域数组*/
 @property (nonatomic, strong) NSArray *countryRegion;
-/**国家数组*/
-@property (nonatomic, strong) NSArray *stateArray;
-/**省份数组*/
-@property (nonatomic, strong) NSArray *provinceArray;
-/**城市数组*/
-@property (nonatomic, strong) NSArray *cityArray;
 /**仅显示中国的城市*/
 @property (nonatomic, assign) BOOL chinaOnly;
+
+#pragma mark - 选择结果
 /**选中结果*/
 @property (nonatomic, strong) id result;
 /**实时回调*/
@@ -1270,9 +1333,6 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 #pragma mark - private
 
 - (void)baseInitialize{
-//    NSLog(@"country %@",self.countryRegion);
-//    NSLog(@"state %@", self.stateArray);
-    [CountryManager shareManager:NO];
     switch (_type) {
         case ZNKPickerTypeObject:
         {
@@ -1314,7 +1374,7 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
             break;
         case ZNKPickerTypeArea:
         {
-            
+            [self initializeForArea];
         }
             break;
         default:
@@ -1331,10 +1391,6 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
     if (!self.pickerViewArray) {
         return;
     }
-    [self addSubview:self.sheetView];
-    [self.sheetView addSubview:self.toolbarContainerView];
-    [self.sheetView addSubview:self.pickerView];
-    [self.sheetView addSubview:self.cancelButton];
     
     self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, [self defaultSheetViewHeight]);
     self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
@@ -1348,6 +1404,10 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
     
     self.pickerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
 
+    [self addSubview:self.sheetView];
+    [self.sheetView addSubview:self.toolbarContainerView];
+    [self.sheetView addSubview:self.pickerView];
+    [self.sheetView addSubview:self.cancelButton];
     
     [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
         self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
@@ -1546,11 +1606,57 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
     
 }
 
+#pragma mark - 地区选择器
+
 - (void)initializeForArea{
+    self.countryRegion = [[CountryManager shareManager:NO] countries];
     if (self.countryRegion.count == 0) {
-        return;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            __weak typeof(self) weakSelf = self;
+            [[CountryManager shareManager:NO] countries:^(NSArray *countryArray) {
+                weakSelf.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, [weakSelf defaultSheetViewHeight]);
+                weakSelf.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(weakSelf.sheetView.frame), [weakSelf defaultToolbarHeight]);
+                [self.toolbarContainerView addSubview:weakSelf.pickerToolbar];
+                
+                weakSelf.cancelButton.frame = CGRectMake(0, CGRectGetHeight(weakSelf.sheetView.frame) - 44, CGRectGetWidth(weakSelf.sheetView.frame), [weakSelf defaultToolbarHeight]);
+                CGFloat pickerViewMinY = CGRectGetMaxY(weakSelf.pickerToolbar.frame) + [weakSelf defaultToolbarPickerMargin];
+                CGFloat pickerViewHeight = CGRectGetHeight(weakSelf.sheetView.frame) - CGRectGetHeight(weakSelf.pickerToolbar.frame) - CGRectGetHeight(weakSelf.cancelButton.frame) - [weakSelf defaultPickerAndCancelButton];
+                
+                
+                weakSelf.pickerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(weakSelf.sheetView.frame), pickerViewHeight);
+                
+                [weakSelf addSubview:weakSelf.sheetView];
+                [weakSelf.sheetView addSubview:weakSelf.toolbarContainerView];
+                [weakSelf.sheetView addSubview:weakSelf.pickerView];
+                [weakSelf.sheetView addSubview:weakSelf.cancelButton];
+                
+                [UIView animateWithDuration:[weakSelf defaultSheetViewAnimationDuration] animations:^{
+                    weakSelf.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(weakSelf.sheetView.frame));
+                }];
+            }];
+        });
+    }else{
+        self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, [self defaultSheetViewHeight]);
+        self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
+        [self.toolbarContainerView addSubview:self.pickerToolbar];
+        
+        self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
+        CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
+        CGFloat pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
+        
+        
+        self.pickerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
+        
+        [self addSubview:self.sheetView];
+        [self.sheetView addSubview:self.toolbarContainerView];
+        [self.sheetView addSubview:self.pickerView];
+        [self.sheetView addSubview:self.cancelButton];
+        
+        [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
+            self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
+        }];
     }
-    NSLog(@"state dict %@",self.stateArray);
+    
 }
 
 - (CGRect)textRect:(NSString *)txt size:(CGSize)s fontSize:(CGFloat)f {
@@ -1898,47 +2004,10 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
     if (_options[ZNKCityPickerChinaOnly] && [_options[ZNKCityPickerChinaOnly] isKindOfClass:[NSNumber class]]) {
         return ((NSNumber *)_options[ZNKCityPickerChinaOnly]).boolValue;
     }
-    return NO;
+    return YES;
 }
 
-#pragma mark - 国家列表
 
-- (NSArray *)countryRegion{
-    if (!_countryRegion) {
-        NSString *path = [[NSBundle bundleForClass:[ZNKPickerView class]] pathForResource:@"area" ofType:@"json"];
-        NSData *jsonData = [NSData dataWithContentsOfFile:path];
-        id jsonResult = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingAllowFragments error:nil];
-        if ([jsonResult isKindOfClass:[NSDictionary class]]) {
-            NSDictionary *jsonDict = (NSDictionary *)jsonResult;
-            id location = jsonDict[LOCATION];
-            if ([location isKindOfClass:[NSDictionary class]]) {
-                NSDictionary *locationDict = (NSDictionary *)location;
-                id countryArr = (NSArray *)locationDict[COUNTRYREGION];
-                if ([countryArr isKindOfClass:[NSArray class]]) {
-                    _countryRegion = (NSArray *)countryArr;
-                }
-            }
-        }
-    }
-    return _countryRegion;
-}
-
-- (NSArray *)stateArray{
-    if (!_stateArray) {
-        [self.countryRegion enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            NSLog(@"country obj %@", obj);
-//            if ([obj isKindOfClass:[NSDictionary class]]) {
-//                NSDictionary * countryDict = (NSDictionary *)obj;
-//                
-//                if (countryDict[STATE] && [countryDict[STATE] isKindOfClass:[NSDictionary class]]) {
-//                    NSDictionary *stateDict = (NSDictionary *)countryDict[STATE];
-//                }
-//                
-//            }
-        }];
-    }
-    return _stateArray;
-}
 
 #pragma mark - 选择器字体字号
 
@@ -2406,16 +2475,33 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 #pragma mark - picker view delegate and data source
 
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView{
-    switch (self.pickerClass) {
-        case 1:
+    switch (_type) {
+        case ZNKPickerTypeArea:
         {
-            return 1;
+            if (self.chinaOnly) {
+                return 3;
+            }else{
+                return 4;
+            }
         }
             break;
-        case 2:
+        case ZNKPickerTypeObject:
         {
-            return 2;
+            switch (self.pickerClass) {
+                case 1:
+                {
+                    return 1;
+                }
+                    break;
+                case 2:
+                {
+                    return 2;
+                }
+                default:
+                    break;
+            }
         }
+            break;
         default:
             break;
     }
@@ -2423,45 +2509,166 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 }
 
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component{
-    switch (self.pickerClass) {
-        case 1:
+    switch (_type) {
+        case ZNKPickerTypeArea:
         {
-            return self.pickerViewArray.count;
+            if (self.chinaOnly) {
+                switch (component) {
+                    case 0:
+                    {
+                        
+                    }
+                        break;
+                    case 1:
+                    {
+                        
+                    }
+                        break;
+                    case 2:
+                    {
+                        
+                    }
+                        break;
+                        
+                    default:
+                        break;
+                }
+            }else{
+                switch (component) {
+                    case 0:
+                    {
+                        
+                    }
+                        break;
+                    case 1:
+                    {
+                        
+                    }
+                        break;
+                    case 2:
+                    {
+                        
+                    }
+                        break;
+                    case 3:
+                    {
+                        
+                    }
+                        break;
+                        
+                    default:
+                        break;
+                }
+            }
         }
             break;
-        case 2:
+        case ZNKPickerTypeObject:
         {
-            return self.pickerViewArray.count;
+            switch (self.pickerClass) {
+                case 1:
+                {
+                    return self.pickerViewArray.count;
+                }
+                    break;
+                case 2:
+                {
+                    return self.pickerViewArray.count;
+                }
+                default:
+                    break;
+            }
         }
+            break;
         default:
             break;
     }
+    
     return 0;
 }
 
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component{
-    switch (self.pickerClass) {
-        case 1:
+    switch (_type) {
+        case ZNKPickerTypeArea:
         {
-            if (self.objectToStringConverter == nil) {
-                
-                if (_ZNKPickerConfirmResult) {
-                    [self formatResult:@"" selectedIndex:row selectObject:[self.pickerViewArray objectAtIndex:row]];
-                    _ZNKPickerConfirmResult(self);
+            if (self.chinaOnly) {
+                switch (component) {
+                    case 0:
+                    {
+                        
+                    }
+                        break;
+                    case 1:
+                    {
+                        
+                    }
+                        break;
+                    case 2:
+                    {
+                        
+                    }
+                        break;
+                        
+                    default:
+                        break;
                 }
-            } else{
-                if (_ZNKPickerConfirmResult) {
-                    [self formatResult:@"" selectedIndex:row selectObject:self.objectToStringConverter ([self.pickerViewArray objectAtIndex:row])];
-                    _ZNKPickerConfirmResult(self);
+            }else{
+                switch (component) {
+                    case 0:
+                    {
+                        
+                    }
+                        break;
+                    case 1:
+                    {
+                        
+                    }
+                        break;
+                    case 2:
+                    {
+                        
+                    }
+                        break;
+                    case 3:
+                    {
+                        
+                    }
+                        break;
+                        
+                    default:
+                        break;
                 }
             }
         }
             break;
-        case 2:
+        case ZNKPickerTypeObject:
         {
-            
+            switch (self.pickerClass) {
+                case 1:
+                {
+                    if (self.objectToStringConverter == nil) {
+                        
+                        if (_ZNKPickerConfirmResult) {
+                            [self formatResult:@"" selectedIndex:row selectObject:[self.pickerViewArray objectAtIndex:row]];
+                            _ZNKPickerConfirmResult(self);
+                        }
+                    } else{
+                        if (_ZNKPickerConfirmResult) {
+                            [self formatResult:@"" selectedIndex:row selectObject:self.objectToStringConverter ([self.pickerViewArray objectAtIndex:row])];
+                            _ZNKPickerConfirmResult(self);
+                        }
+                    }
+                }
+                    break;
+                case 2:
+                {
+                    
+                }
+                default:
+                    break;
+            }
         }
+            break;
         default:
             break;
     }
@@ -2471,53 +2678,67 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
             viewForRow:(NSInteger)row
           forComponent:(NSInteger)component
            reusingView:(UIView *)view {
-    switch (self.pickerClass) {
-        case 1:
+    
+    switch (_type) {
+        case ZNKPickerTypeArea:
         {
-            UIView *customPickerView = view;
             
-            UILabel *pickerViewLabel;
-            
-            if (customPickerView==nil) {
-                
-                CGRect frame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame), self.tableViewRowHeight);
-                customPickerView = [[UIView alloc] initWithFrame: frame];
-                
-                
-                CGRect labelFrame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame), self.tableViewRowHeight); // 35 or 44
-                pickerViewLabel = [[UILabel alloc] initWithFrame:labelFrame];
-                [pickerViewLabel setTag:1];
-                [pickerViewLabel setTextAlignment: self.pickerViewTextAlignment];
-                [pickerViewLabel setBackgroundColor:[UIColor clearColor]];
-                [pickerViewLabel setTextColor:self.pickerViewTextColor];
-                [pickerViewLabel setFont:self.pickerViewFont];
-                [pickerViewLabel setAdjustsFontSizeToFitWidth:YES];
-                [pickerViewLabel setContentScaleFactor:0.5];
-                [pickerViewLabel setNumberOfLines:0];
-                [customPickerView addSubview:pickerViewLabel];
-            } else{
-                
-                for (UIView *view in customPickerView.subviews) {
-                    if (view.tag == 1) {
-                        pickerViewLabel = (UILabel *)view;
-                        break;
-                    }
-                }
-            }
-            
-            if (self.objectToStringConverter == nil){
-                [pickerViewLabel setText: [self.pickerViewArray objectAtIndex:row]];
-            } else{
-                [pickerViewLabel setText:(self.objectToStringConverter ([self.pickerViewArray objectAtIndex:row]))];
-            }
-            
-            return customPickerView;
         }
             break;
-        case 2:
+        case ZNKPickerTypeObject:
         {
-            return nil;
+            switch (self.pickerClass) {
+                case 1:
+                {
+                    UIView *customPickerView = view;
+                    
+                    UILabel *pickerViewLabel;
+                    
+                    if (customPickerView==nil) {
+                        
+                        CGRect frame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame), self.tableViewRowHeight);
+                        customPickerView = [[UIView alloc] initWithFrame: frame];
+                        
+                        
+                        CGRect labelFrame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame), self.tableViewRowHeight); // 35 or 44
+                        pickerViewLabel = [[UILabel alloc] initWithFrame:labelFrame];
+                        [pickerViewLabel setTag:1];
+                        [pickerViewLabel setTextAlignment: self.pickerViewTextAlignment];
+                        [pickerViewLabel setBackgroundColor:[UIColor clearColor]];
+                        [pickerViewLabel setTextColor:self.pickerViewTextColor];
+                        [pickerViewLabel setFont:self.pickerViewFont];
+                        [pickerViewLabel setAdjustsFontSizeToFitWidth:YES];
+                        [pickerViewLabel setContentScaleFactor:0.5];
+                        [pickerViewLabel setNumberOfLines:0];
+                        [customPickerView addSubview:pickerViewLabel];
+                    } else{
+                        
+                        for (UIView *view in customPickerView.subviews) {
+                            if (view.tag == 1) {
+                                pickerViewLabel = (UILabel *)view;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (self.objectToStringConverter == nil){
+                        [pickerViewLabel setText: [self.pickerViewArray objectAtIndex:row]];
+                    } else{
+                        [pickerViewLabel setText:(self.objectToStringConverter ([self.pickerViewArray objectAtIndex:row]))];
+                    }
+                    
+                    return customPickerView;
+                }
+                    break;
+                case 2:
+                {
+                    return nil;
+                }
+                default:
+                    break;
+            }
         }
+            break;
         default:
             break;
     }

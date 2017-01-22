@@ -15,6 +15,7 @@
 @property (nonatomic, readonly) NSString *name;
 /**省份列表*/
 @property (nonatomic, readonly) NSArray *provinceArray;
+
 @end
 
 @interface Province : NSObject<NSCoding>
@@ -40,6 +41,21 @@
 @property (nonatomic, readonly) NSString *code;
 /**区域名称*/
 @property (nonatomic, readonly) NSString *name;
+@end
+
+@interface CountryManager : NSObject
+/**国家管理类*/
++ (CountryManager *)shareManager:(BOOL)kill;
+/**获取全部国家*/
+- (NSArray *)countries;
+/**获取全部国家 block回调*/
+- (NSArray *)countries:(void(^)(NSArray *countryArray))completionHandler;
+/**根据国家获取省份*/
+- (NSArray *)provincesForCountry:(Country *)country;
+/**根据国家和省份获取城市*/
+- (NSArray *)citiesForProvince:(Province *)province forCountry:(Country *)country;
+/**根据国家省份城市获取区域*/
+- (NSArray *)regionsForCities:(City *)city forProvince:(Province *)province forCountry:(Country *)country;
 @end
 
 @interface UIImage (ZNKPickerView)
