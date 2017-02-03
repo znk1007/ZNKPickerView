@@ -18,6 +18,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    [CountryManager shareManager:NO];
     
     UIButton *testButton = [UIButton buttonWithType:UIButtonTypeCustom];
     testButton.frame = CGRectMake(CGRectGetWidth(self.view.frame) / 2 - 30, 50, 60, 40);
@@ -165,9 +166,11 @@
             [ZNKPickerView showInView:self.view.window pickerType:ZNKPickerTypeArea options:option objectToStringConverter:^NSString *(id obj) {
                 return [obj description];
             } realTimeResult:^(ZNKPickerView *pickerView) {
-                NSLog(@"realTimeResult picker view index %ld",(long)pickerView.index);
-                NSLog(@"realTimeResult picker view input %@", pickerView.inputResult);
-                NSLog(@"realTimeResult picker view select result %@",pickerView.result);
+//                NSLog(@"realTimeResult picker view index %ld",(long)pickerView.index);
+//                NSLog(@"realTimeResult picker view input %@", pickerView.inputResult);
+//                NSLog(@"realTimeResult picker view select result %@",pickerView.result);
+                CountryPicker *picker = (CountryPicker *)pickerView.result;
+                NSLog(@"picker country %@ - province %@ - city %@ - region %@", picker.country, picker.province, picker.city, picker.region);
             } completionHandler:^(ZNKPickerView *pickerView) {
                 NSLog(@"completionHandler picker view index %ld",(long)pickerView.index);
                 NSLog(@"completionHandler picker view input %@", pickerView.inputResult);

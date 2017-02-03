@@ -21,46 +21,66 @@
 #define CODE            @"-Code"
 #define NAME            @"-Name"
 
-
-
-@interface Country ()<NSCoding>
+@interface Country : NSObject<NSCoding>
 /**国家代码*/
 @property (nonatomic, copy) NSString *code;
 /**国家名称*/
 @property (nonatomic, copy) NSString *name;
 /**省份列表*/
-@property (nonatomic, strong) NSArray *provinceArray;
+@property (nonatomic, copy) NSArray *provinceArray;
+
 @end
 
-@interface Province ()<NSCoding>
+@interface Province : NSObject<NSCoding>
 /**省份代码*/
 @property (nonatomic, copy) NSString *code;
 /**省份名称*/
 @property (nonatomic, copy) NSString *name;
 /**城市列表*/
-@property (nonatomic, strong) NSArray *cityArray;
+@property (nonatomic, copy) NSArray *cityArray;
 @end
 
-@interface City ()<NSCoding>
+@interface City : NSObject<NSCoding>
 /**城市代码*/
 @property (nonatomic, copy) NSString *code;
 /**城市名称*/
 @property (nonatomic, copy) NSString *name;
 /**区域列表*/
-@property (nonatomic, strong) NSArray *regionArray;
+@property (nonatomic, copy) NSArray *regionArray;
 @end
 
-@interface Region ()<NSCoding>
+@interface Region : NSObject<NSCoding>
 /**区域代码*/
 @property (nonatomic, copy) NSString *code;
 /**区域名称*/
 @property (nonatomic, copy) NSString *name;
 @end
 
+@interface CountryPicker ()
+/**国家*/
+@property (nonatomic, copy) NSString *country;
+/**省份*/
+@property (nonatomic, copy) NSString *province;
+/**城市*/
+@property (nonatomic, copy) NSString *city;
+/**区域*/
+@property (nonatomic, copy) NSString *region;
 
+@end
 
 @interface CountryManager ()
-
+/**获取全部国家*/
+- (NSArray *)countries;
+#if 0
+/**获取全部国家 block回调*/
+- (NSArray *)countries:(void(^)(NSArray *countryArray))completionHandler;
+#endif
+/**根据国家获取省份*/
+- (Country *)countryForCountryName:(NSString *)countryName;
+/**根据国家和省份获取城市*/
+- (Province *)provinceForProvinceName:(NSString *)provinceName forCountryName:(NSString *)countryName;
+/**根据国家省份城市获取区域*/
+- (City *)cityForCityName:(NSString *)cityName forProvinceName:(NSString *)provinceName forCountryName:(NSString *)countryName;
 @end
 
 @implementation CountryManager
@@ -89,6 +109,8 @@
     return self;
 }
 
+
+#if 0
 - (NSArray *)countries:(void(^)(NSArray *countryArray))completionHandler{
     NSData *theData = [NSData dataWithContentsOfFile:[self documentPath]];
     if (theData.length > 0) {
@@ -106,6 +128,7 @@
     }
     return [NSArray array];
 }
+#endif
 
 - (NSArray *)countries{
     NSData *theData = [NSData dataWithContentsOfFile:[self documentPath]];
@@ -120,49 +143,49 @@
 }
 
 
-- (NSArray *)provincesForCountry:(Country *)country{
+- (Country *)countryForCountryName:(NSString *)countryName{
     NSArray *countryArray = [self countries];
-    __block NSArray *provinceArray = [NSArray array];
+    __block Country *currentCountry = nil;
     [countryArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         if ([obj isKindOfClass:[Country class]]) {
             Country *temp = (Country *)obj;
-            if ([temp.name isEqualToString:country.name]) {
-                provinceArray = temp.provinceArray;
+            if ([temp.name isEqualToString:countryName]) {
+                currentCountry = temp;
                 *stop = YES;
             }
         }
     }];
-    return provinceArray;
+    return currentCountry;
 }
 
-- (NSArray *)citiesForProvince:(Province *)province forCountry:(Country *)country{
-    NSArray *provinceArray = [self provincesForCountry:country];
-    __block NSArray *citiesArray = [NSArray array];
-    [provinceArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+- (Province *)provinceForProvinceName:(NSString *)provinceName forCountryName:(NSString *)countryName{
+    Country *currentCountry = [self countryForCountryName:countryName];
+    __block Province *currentProvince = nil;
+    [currentCountry.provinceArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         if ([obj isKindOfClass:[Province class]]) {
             Province *temp = (Province *)obj;
-            if ([temp.name isEqualToString:province.name]) {
-                citiesArray = temp.cityArray;
+            if ([temp.name isEqualToString:provinceName]) {
+                currentProvince = temp;
                 *stop = YES;
             }
         }
     }];
-    return citiesArray;
+    return currentProvince;
 }
 
-- (NSArray *)regionsForCities:(City *)city forProvince:(Province *)province forCountry:(Country *)country{
-    NSArray *citiesArray = [self citiesForProvince:province forCountry:country];
-    __block NSArray *regionArray = [NSArray array];
-    [citiesArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+- (City *)cityForCityName:(NSString *)cityName forProvinceName:(NSString *)provinceName forCountryName:(NSString *)countryName{
+    Province *currentProvince = [self provinceForProvinceName:provinceName forCountryName:countryName];
+    __block City *currentCity = nil;
+    [currentProvince.cityArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         if ([obj isKindOfClass:[City class]]) {
             City *temp = (City *)obj;
-            if ([temp.name isEqualToString:city.name]) {
-                regionArray = temp.regionArray;
+            if ([temp.name isEqualToString:cityName]) {
+                currentCity = temp;
                 *stop = YES;
             }
         }
     }];
-    return regionArray;
+    return currentCity;
 }
 
 - (void)initilizeWithResult:(void(^)(NSArray * result))completionHandler{
@@ -198,8 +221,8 @@
             if (countryDict[CODE] && [countryDict[CODE] isKindOfClass:[NSString class]]) {
                 countryModel.code = (NSString *)countryDict[CODE];
             }
-            if (countryDict[NAME] && [countryDict[CODE] isKindOfClass:[NSString class]]) {
-                countryModel.name = (NSString *)countryDict[CODE];
+            if (countryDict[NAME] && [countryDict[NAME] isKindOfClass:[NSString class]]) {
+                countryModel.name = (NSString *)countryDict[NAME];
             }
             
             if (countryDict[STATE] && [countryDict[STATE] isKindOfClass:[NSArray class]]) {
@@ -447,6 +470,23 @@
     [coder encodeObject:self.code forKey:@"RegionCode"];
     [coder encodeObject:self.name forKey:@"RegionName"];
 }
+
+@end
+
+@implementation CountryPicker
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.country = @"";
+        self.province = @"";
+        self.city = @"";
+        self.region = @"";
+    }
+    return self;
+}
+
 
 @end
 
@@ -1272,9 +1312,19 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 
 #pragma mark - 城市选择器
 /**国家区域数组*/
-@property (nonatomic, strong) NSArray *countryRegion;
+//@property (nonatomic, strong) NSArray *countryRegion;
 /**仅显示中国的城市*/
 @property (nonatomic, assign) BOOL chinaOnly;
+/**国家数组*/
+@property (nonatomic, strong) NSArray *countryArray;
+/**省份数组*/
+@property (nonatomic, strong) NSArray *provinceArray;
+/**城市数组*/
+@property (nonatomic, strong) NSArray *cityArray;
+/**区域数组*/
+@property (nonatomic, strong) NSArray *regionArray;
+/**国家选择结果*/
+@property (nonatomic, strong) CountryPicker *pickerCountry;
 
 #pragma mark - 选择结果
 /**选中结果*/
@@ -1609,8 +1659,9 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
 #pragma mark - 地区选择器
 
 - (void)initializeForArea{
-    self.countryRegion = [[CountryManager shareManager:NO] countries];
-    if (self.countryRegion.count == 0) {
+    self.countryArray = [[CountryManager shareManager:NO] countries];
+    if (self.countryArray.count == 0) {
+#if 0
         dispatch_async(dispatch_get_main_queue(), ^{
             __weak typeof(self) weakSelf = self;
             [[CountryManager shareManager:NO] countries:^(NSArray *countryArray) {
@@ -1635,17 +1686,52 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                 }];
             }];
         });
+#endif
     }else{
+        self.pickerCountry = [[CountryPicker alloc] init];
+        if (self.chinaOnly) {
+            Country *currentCountry = [[CountryManager shareManager:NO] countryForCountryName:@"中国"];
+            self.provinceArray = currentCountry.provinceArray;
+            
+            Province *currentProvince = (Province *)[self.provinceArray firstObject];
+            self.cityArray = currentProvince.cityArray;
+            
+            City *currentCity = (City *)[self.cityArray firstObject];
+            self.regionArray = currentCity.regionArray;
+            self.pickerCountry.country = @"中国";
+            self.pickerCountry.province = currentProvince.name;
+            self.pickerCountry.city = currentCity.name;
+            Region *currentRegion = (Region *)[self.regionArray firstObject];
+            self.pickerCountry.region = currentRegion.name;
+        }else{
+            Country *currentCountry = (Country *)[self.countryArray firstObject];
+            self.provinceArray = currentCountry.provinceArray;
+            
+            Province *currentProvince = (Province *)[self.provinceArray firstObject];
+            self.cityArray = currentProvince.cityArray;
+            
+            City *currentCity = (City *)[self.cityArray firstObject];
+            self.regionArray = currentCity.regionArray;
+            
+            self.pickerCountry.country = currentCountry.name;
+            self.pickerCountry.province = currentProvince.name;
+            self.pickerCountry.city = currentCity.name;
+            Region *currentRegion = (Region *)[self.regionArray firstObject];
+            self.pickerCountry.region = currentRegion.name;
+        }
+        
         self.sheetView.frame = CGRectMake(0, znk_screenHeight, znk_screenWidth, [self defaultSheetViewHeight]);
         self.toolbarContainerView.frame = CGRectMake(0, 0, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
         [self.toolbarContainerView addSubview:self.pickerToolbar];
         
         self.cancelButton.frame = CGRectMake(0, CGRectGetHeight(self.sheetView.frame) - 44, CGRectGetWidth(self.sheetView.frame), [self defaultToolbarHeight]);
         CGFloat pickerViewMinY = CGRectGetMaxY(self.pickerToolbar.frame) + [self defaultToolbarPickerMargin];
-        CGFloat pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton];
+        CGFloat pickerViewHeight = CGRectGetHeight(self.sheetView.frame) - CGRectGetHeight(self.pickerToolbar.frame) - CGRectGetHeight(self.cancelButton.frame) - [self defaultPickerAndCancelButton] - [self defaultToolbarPickerMargin];
         
         
         self.pickerView.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
+        self.pickerView.layer.frame = CGRectMake(0, pickerViewMinY, CGRectGetWidth(self.sheetView.frame), pickerViewHeight);
+        [self.pickerView selectRow:0 inComponent:0 animated:YES];
         
         [self addSubview:self.sheetView];
         [self.sheetView addSubview:self.toolbarContainerView];
@@ -1655,6 +1741,11 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
         [UIView animateWithDuration:[self defaultSheetViewAnimationDuration] animations:^{
             self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
         }];
+        
+        if (_ZNKPickerRealTimeResult) {
+            [self formatResult:@"" selectedIndex:-1 selectObject:self.pickerCountry];
+            _ZNKPickerRealTimeResult(self);
+        }
     }
     
 }
@@ -2516,17 +2607,17 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                 switch (component) {
                     case 0:
                     {
-                        
+                        return self.provinceArray.count;
                     }
                         break;
                     case 1:
                     {
-                        
+                        return self.cityArray.count;
                     }
                         break;
                     case 2:
                     {
-                        
+                        return self.regionArray.count;
                     }
                         break;
                         
@@ -2537,22 +2628,22 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                 switch (component) {
                     case 0:
                     {
-                        
+                        return self.countryArray.count;
                     }
                         break;
                     case 1:
                     {
-                        
+                        return self.provinceArray.count;
                     }
                         break;
                     case 2:
                     {
-                        
+                        return self.cityArray.count;
                     }
                         break;
                     case 3:
                     {
-                        
+                        return self.regionArray.count;
                     }
                         break;
                         
@@ -2591,21 +2682,51 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
     switch (_type) {
         case ZNKPickerTypeArea:
         {
+            self.pickerCountry.country = @"";
+            self.pickerCountry.province = @"";
+            self.pickerCountry.city = @"";
+            self.pickerCountry.region = @"";
             if (self.chinaOnly) {
                 switch (component) {
                     case 0:
                     {
-                        
+                        Province *currentProvince = [self.provinceArray objectAtIndex:row];
+                        self.pickerCountry.province = currentProvince.name;
+                        self.cityArray = currentProvince.cityArray;
+                        if (self.cityArray.count > 0) {
+                            NSInteger com1Row = [pickerView selectedRowInComponent:1];
+                            City *currentCity = (City *)[self.cityArray objectAtIndex:com1Row];
+                            self.pickerCountry.city = currentCity.name;
+                            self.regionArray = currentCity.regionArray;
+                            [pickerView reloadComponent:1];
+                            [pickerView reloadComponent:2];
+                            if (self.regionArray.count > 0) {
+                                NSInteger com2Row = [pickerView selectedRowInComponent:2];
+                                Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com2Row];
+                                self.pickerCountry.region = currentRegion.name;
+                            }
+                        }
                     }
                         break;
                     case 1:
                     {
-                        
+                        City *currentCity = (City *)[self.cityArray objectAtIndex:row];
+                        self.regionArray = currentCity.regionArray;
+                        if (self.regionArray.count > 0) {
+                            [pickerView reloadComponent:2];
+                            NSInteger com2Row = [pickerView selectedRowInComponent:2];
+                            Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com2Row];
+                            self.pickerCountry.city = currentCity.name;
+                            self.pickerCountry.region = currentRegion.name;
+                        }
                     }
                         break;
                     case 2:
                     {
-                        
+                        if (self.regionArray.count > 0) {
+                            Region *currentRegion = (Region *)[self.regionArray objectAtIndex:row];
+                            self.pickerCountry.region = currentRegion.name;
+                        }
                     }
                         break;
                         
@@ -2616,28 +2737,81 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                 switch (component) {
                     case 0:
                     {
+                        Country *currentCountry = (Country *)[self.countryArray objectAtIndex:row];
+                        self.pickerCountry.country = currentCountry.name;
+                        self.provinceArray = currentCountry.provinceArray;
+                        if (self.provinceArray.count > 0) {
+                            [pickerView reloadComponent:1];
+                            NSInteger com1Row = [pickerView selectedRowInComponent:1];
+                            Province *currentProvince = [self.provinceArray objectAtIndex:com1Row];
+                            self.pickerCountry.province = currentProvince.name;
+                            self.cityArray = currentProvince.cityArray;
+                            if (self.cityArray.count > 0) {
+                                [pickerView reloadComponent:2];
+                                NSInteger com2Row = [pickerView selectedRowInComponent:2];
+                                City *currentCity = (City *)[self.cityArray objectAtIndex:com2Row];
+                                self.pickerCountry.city = currentCity.name;
+                                self.regionArray = currentCity.regionArray;
+                                if (self.regionArray.count > 0) {
+                                    CGFloat com3Row = [pickerView selectedRowInComponent:3];
+                                    Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com3Row];
+                                    [pickerView reloadComponent:3];
+                                    self.pickerCountry.region = currentRegion.name;
+                                }
+                            }
+                        }
                         
                     }
                         break;
                     case 1:
                     {
-                        
+                        Province *currentProvince = [self.provinceArray objectAtIndex:row];
+                        self.pickerCountry.province = currentProvince.name;
+                        self.cityArray = currentProvince.cityArray;
+                        if (self.cityArray.count > 0) {
+                            [pickerView reloadComponent:2];
+                            NSInteger com2Row = [pickerView selectedRowInComponent:2];
+                            City *currentCity = (City *)[self.cityArray objectAtIndex:com2Row];
+                            self.pickerCountry.city = currentCity.name;
+                            self.regionArray = currentCity.regionArray;
+                            if (self.regionArray.count > 0) {
+                                CGFloat com3Row = [pickerView selectedRowInComponent:3];
+                                Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com3Row];
+                                [pickerView reloadComponent:3];
+                                self.pickerCountry.region = currentRegion.name;
+                            }
+                        }
                     }
                         break;
                     case 2:
                     {
-                        
+                        City *currentCity = (City *)[self.cityArray objectAtIndex:row];
+                        self.pickerCountry.city = currentCity.name;
+                        self.regionArray = currentCity.regionArray;
+                        if (self.regionArray.count > 0) {
+                            CGFloat com3Row = [pickerView selectedRowInComponent:3];
+                            Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com3Row];
+                            [pickerView reloadComponent:3];
+                            self.pickerCountry.region = currentRegion.name;
+                        }
                     }
                         break;
                     case 3:
                     {
-                        
+                        if (self.regionArray.count > 0) {
+                            Region *currentRegion = (Region *)[self.regionArray objectAtIndex:row];
+                            self.pickerCountry.region = currentRegion.name;
+                        }
                     }
                         break;
                         
                     default:
                         break;
                 }
+            }
+            if (_ZNKPickerRealTimeResult) {
+                [self formatResult:@"" selectedIndex:-1 selectObject:self.pickerCountry];
+                _ZNKPickerRealTimeResult(self);
             }
         }
             break;
@@ -2674,6 +2848,7 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
     }
 }
 
+
 - (UIView *)pickerView:(UIPickerView *)pickerView
             viewForRow:(NSInteger)row
           forComponent:(NSInteger)component
@@ -2682,7 +2857,88 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
     switch (_type) {
         case ZNKPickerTypeArea:
         {
+            UIView *customPickerView = view;
             
+            UILabel *pickerViewLabel;
+            
+            if (customPickerView==nil) {
+                if (self.chinaOnly) {
+                    switch (component) {
+                        case 0:
+                        {
+                            CGRect frame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame) / 3, self.tableViewRowHeight);
+                            customPickerView = [[UIView alloc] initWithFrame: frame];
+                        }
+                            break;
+                        case 1:
+                        {
+                            CGRect frame = CGRectMake(0.0, CGRectGetWidth(pickerView.frame) / (1 * 3), CGRectGetWidth(pickerView.frame) / 3, self.tableViewRowHeight);
+                            customPickerView = [[UIView alloc] initWithFrame: frame];
+                        }
+                            break;
+                        case 2:
+                        {
+                            CGRect frame = CGRectMake(0.0, CGRectGetWidth(pickerView.frame) / 3 * (2 * 3), CGRectGetWidth(pickerView.frame) / 3, self.tableViewRowHeight);
+                            customPickerView = [[UIView alloc] initWithFrame: frame];
+                        }
+                            break;
+                        default:
+                            break;
+                    }
+                }else{
+                    
+                }
+                CGRect labelFrame = CGRectMake(0.0, 0.0, CGRectGetWidth(customPickerView.frame), self.tableViewRowHeight); // 35 or 44
+                pickerViewLabel = [[UILabel alloc] initWithFrame:labelFrame];
+                [pickerViewLabel setTag:1];
+                [pickerViewLabel setTextAlignment: self.pickerViewTextAlignment];
+                [pickerViewLabel setBackgroundColor:[UIColor clearColor]];
+                [pickerViewLabel setTextColor:self.pickerViewTextColor];
+                [pickerViewLabel setFont:self.pickerViewFont];
+                [pickerViewLabel setAdjustsFontSizeToFitWidth:YES];
+                [pickerViewLabel setContentScaleFactor:0.5];
+                [pickerViewLabel setNumberOfLines:0];
+                [customPickerView addSubview:pickerViewLabel];
+            } else{
+                
+                for (UIView *view in customPickerView.subviews) {
+                    if (view.tag == 1) {
+                        pickerViewLabel = (UILabel *)view;
+                        break;
+                    }
+                }
+            }
+            
+            if (self.chinaOnly) {
+                switch (component) {
+                    case 0:
+                    {
+                        Province *pro = (Province *)[self.provinceArray objectAtIndex:row];
+                        [pickerViewLabel setText:pro.name];
+                    }
+                        break;
+                    case 1:
+                    {
+                        City *pro = (City *)[self.cityArray objectAtIndex:row];
+                        [pickerViewLabel setText:pro.name];
+                    }
+                        break;
+                    case 2:
+                    {
+                        Region *pro = (Region *)[self.regionArray objectAtIndex:row];
+                        [pickerViewLabel setText:pro.name];
+                    }
+                        break;
+                    default:
+                        break;
+                }
+            }else{
+                
+            }
+            
+            
+            
+            return customPickerView;
         }
             break;
         case ZNKPickerTypeObject:
@@ -2700,7 +2956,7 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                         customPickerView = [[UIView alloc] initWithFrame: frame];
                         
                         
-                        CGRect labelFrame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame), self.tableViewRowHeight); // 35 or 44
+                        CGRect labelFrame = CGRectMake(0.0, 0.0, CGRectGetWidth(customPickerView.frame), self.tableViewRowHeight); // 35 or 44
                         pickerViewLabel = [[UILabel alloc] initWithFrame:labelFrame];
                         [pickerViewLabel setTag:1];
                         [pickerViewLabel setTextAlignment: self.pickerViewTextAlignment];
