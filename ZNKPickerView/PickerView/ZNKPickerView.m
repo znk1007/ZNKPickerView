@@ -1424,6 +1424,7 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
             break;
         case ZNKPickerTypeArea:
         {
+            [CountryManager shareManager:NO];
             [self initializeForArea];
         }
             break;
@@ -2682,10 +2683,6 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
     switch (_type) {
         case ZNKPickerTypeArea:
         {
-            self.pickerCountry.country = @"";
-            self.pickerCountry.province = @"";
-            self.pickerCountry.city = @"";
-            self.pickerCountry.region = @"";
             if (self.chinaOnly) {
                 switch (component) {
                     case 0:
@@ -2704,20 +2701,26 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                                 NSInteger com2Row = [pickerView selectedRowInComponent:2];
                                 Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com2Row];
                                 self.pickerCountry.region = currentRegion.name;
+                            }else{
+                                self.pickerCountry.region = @"";
                             }
+                        }else{
+                            self.pickerCountry.city = @"";
                         }
                     }
                         break;
                     case 1:
                     {
                         City *currentCity = (City *)[self.cityArray objectAtIndex:row];
+                        self.pickerCountry.city = currentCity.name;
                         self.regionArray = currentCity.regionArray;
                         if (self.regionArray.count > 0) {
                             [pickerView reloadComponent:2];
                             NSInteger com2Row = [pickerView selectedRowInComponent:2];
                             Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com2Row];
-                            self.pickerCountry.city = currentCity.name;
                             self.pickerCountry.region = currentRegion.name;
+                        }else{
+                            self.pickerCountry.region = @"";
                         }
                     }
                         break;
@@ -2726,6 +2729,8 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                         if (self.regionArray.count > 0) {
                             Region *currentRegion = (Region *)[self.regionArray objectAtIndex:row];
                             self.pickerCountry.region = currentRegion.name;
+                        }else{
+                            self.pickerCountry.region = @"";
                         }
                     }
                         break;
@@ -2757,8 +2762,14 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                                     Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com3Row];
                                     [pickerView reloadComponent:3];
                                     self.pickerCountry.region = currentRegion.name;
+                                }else{
+                                    self.pickerCountry.region = @"";
                                 }
+                            }else{
+                                self.pickerCountry.city = @"";
                             }
+                        }else{
+                            self.pickerCountry.province = @"";
                         }
                         
                     }
@@ -2779,7 +2790,11 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                                 Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com3Row];
                                 [pickerView reloadComponent:3];
                                 self.pickerCountry.region = currentRegion.name;
+                            }else{
+                                self.pickerCountry.region = @"";
                             }
+                        }else{
+                            self.pickerCountry.city = @"";
                         }
                     }
                         break;
@@ -2793,6 +2808,8 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                             Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com3Row];
                             [pickerView reloadComponent:3];
                             self.pickerCountry.region = currentRegion.name;
+                        }else{
+                            self.pickerCountry.region = @"";
                         }
                     }
                         break;
@@ -2801,6 +2818,8 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                         if (self.regionArray.count > 0) {
                             Region *currentRegion = (Region *)[self.regionArray objectAtIndex:row];
                             self.pickerCountry.region = currentRegion.name;
+                        }else{
+                            self.pickerCountry.region = @"";
                         }
                     }
                         break;
