@@ -14,11 +14,13 @@
 	2. 自定义ActionSheet/AlertView
 
 A.ActionSheet
-![](https://github.com/znk1007/ZNKPickerView/blob/master/screenshoot/WechatIMG2.jpeg
-)  	
-![](https://github.com/znk1007/ZNKPickerView/blob/master/screenshoot/WechatIMG4.jpeg
-)
+
+![](https://github.com/znk1007/ZNKPickerView/blob/master/screenshoot/WechatIMG2.jpeg)  	
+
+![](https://github.com/znk1007/ZNKPickerView/blob/master/screenshoot/WechatIMG4.jpeg)
+
 B.AlertView
+
 ![](https://github.com/znk1007/ZNKPickerView/blob/master/screenshoot/WechatIMG5.jpeg
 )
 	
