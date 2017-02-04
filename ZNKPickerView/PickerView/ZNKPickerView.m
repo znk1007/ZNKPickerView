@@ -224,60 +224,164 @@
             if (countryDict[NAME] && [countryDict[NAME] isKindOfClass:[NSString class]]) {
                 countryModel.name = (NSString *)countryDict[NAME];
             }
-            
-            if (countryDict[STATE] && [countryDict[STATE] isKindOfClass:[NSArray class]]) {
-                NSMutableArray *stateArray = [NSMutableArray array];
-                NSArray *stateArr = (NSArray *)countryDict[STATE];
-                [stateArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                    if ([obj isKindOfClass:[NSDictionary class]]) {
-                        Province *provinceModel = [[Province alloc] init];
-                        NSDictionary *provinceDict = (NSDictionary *)obj;
-                        if (provinceDict[CODE] && [provinceDict[CODE] isKindOfClass:[NSString class]]) {
-                            provinceModel.code = (NSString *)provinceDict[CODE];
-                        }
-                        if (provinceDict[NAME] && [provinceDict[NAME] isKindOfClass:[NSString class]]) {
-                            provinceModel.name = (NSString *)provinceDict[NAME];
-                        }
-                        if (provinceDict[CITY] && [provinceDict[CITY] isKindOfClass:[NSArray class]]) {
-                            NSArray *cityArr = (NSArray *)provinceDict[CITY];
-                            NSMutableArray *cityArray = [NSMutableArray array];
-                            [cityArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                                if ([obj isKindOfClass:[NSDictionary class]]) {
-                                    NSDictionary *cityDict = (NSDictionary *)obj;
-                                    City *cityModel = [[City alloc] init];
-                                    if (cityDict[CODE] && [cityDict[CODE] isKindOfClass:[NSString class]]) {
-                                        cityModel.code = (NSString *)cityDict[CODE];
-                                    }
-                                    if (cityDict[NAME] && [cityDict[NAME] isKindOfClass:[NSString class]]) {
-                                        cityModel.name = (NSString *)cityDict[NAME];
-                                    }
-                                    if (cityDict[REGION] && [cityDict[REGION] isKindOfClass:[NSArray class]]) {
-                                        NSArray *regionArr = (NSArray *)cityDict[REGION];
-                                        NSMutableArray *regionArray = [NSMutableArray array];
-                                        [regionArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                                            if ([obj isKindOfClass:[NSDictionary class]]) {
-                                                Region *regionModel = [[Region alloc] init];
-                                                NSDictionary *regionDict = (NSDictionary *)obj;
-                                                if (regionDict[CODE] && [regionDict[CODE] isKindOfClass:[NSString class]]) {
-                                                    regionModel.code = (NSString *)regionDict[CODE];
+            if (countryDict[STATE]) {
+                if ([countryDict[STATE] isKindOfClass:[NSArray class]]) {
+                    NSMutableArray *stateArray = [NSMutableArray array];
+                    NSArray *stateArr = (NSArray *)countryDict[STATE];
+                    [stateArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                        if ([obj isKindOfClass:[NSDictionary class]]) {
+                            Province *provinceModel = [[Province alloc] init];
+                            NSDictionary *provinceDict = (NSDictionary *)obj;
+                            if (provinceDict[CODE] && [provinceDict[CODE] isKindOfClass:[NSString class]]) {
+                                provinceModel.code = (NSString *)provinceDict[CODE];
+                            }
+                            if (provinceDict[NAME] && [provinceDict[NAME] isKindOfClass:[NSString class]]) {
+                                provinceModel.name = (NSString *)provinceDict[NAME];
+                            }
+                            if (provinceDict[CITY] && [provinceDict[CITY] isKindOfClass:[NSArray class]]) {
+                                NSArray *cityArr = (NSArray *)provinceDict[CITY];
+                                NSMutableArray *cityArray = [NSMutableArray array];
+                                [cityArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                    if ([obj isKindOfClass:[NSDictionary class]]) {
+                                        NSDictionary *cityDict = (NSDictionary *)obj;
+                                        City *cityModel = [[City alloc] init];
+                                        if (cityDict[CODE] && [cityDict[CODE] isKindOfClass:[NSString class]]) {
+                                            cityModel.code = (NSString *)cityDict[CODE];
+                                        }
+                                        if (cityDict[NAME] && [cityDict[NAME] isKindOfClass:[NSString class]]) {
+                                            cityModel.name = (NSString *)cityDict[NAME];
+                                        }
+                                        if (cityDict[REGION] && [cityDict[REGION] isKindOfClass:[NSArray class]]) {
+                                            NSArray *regionArr = (NSArray *)cityDict[REGION];
+                                            NSMutableArray *regionArray = [NSMutableArray array];
+                                            [regionArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                                if ([obj isKindOfClass:[NSDictionary class]]) {
+                                                    Region *regionModel = [[Region alloc] init];
+                                                    NSDictionary *regionDict = (NSDictionary *)obj;
+                                                    if (regionDict[CODE] && [regionDict[CODE] isKindOfClass:[NSString class]]) {
+                                                        regionModel.code = (NSString *)regionDict[CODE];
+                                                    }
+                                                    if (regionDict[NAME] && [regionDict[NAME] isKindOfClass:[NSString class]]) {
+                                                        regionModel.name = (NSString *)regionDict[NAME];
+                                                    }
+                                                    [regionArray addObject:regionModel];
                                                 }
-                                                if (regionDict[NAME] && [regionDict[NAME] isKindOfClass:[NSString class]]) {
-                                                    regionModel.name = (NSString *)regionDict[NAME];
-                                                }
-                                                [regionArray addObject:regionModel];
-                                            }
-                                        }];
-                                        cityModel.regionArray = [regionArray copy];
+                                            }];
+                                            cityModel.regionArray = [regionArray copy];
+                                        }
+                                        [cityArray addObject:cityModel];
                                     }
-                                    [cityArray addObject:cityModel];
+                                }];
+                                provinceModel.cityArray = [cityArray copy];
+                            }
+                            [stateArray addObject:provinceModel];
+                        }
+                    }];
+                    countryModel.provinceArray = [stateArray copy];
+
+                }else if ([countryDict[STATE] isKindOfClass:[NSDictionary class]]){
+                    NSMutableArray *stateArray = [NSMutableArray array];
+                    NSDictionary *stateArr = (NSDictionary *)countryDict[STATE];
+                    [stateArr enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+                        if ([obj isKindOfClass:[NSDictionary class]]) {
+                            Province *provinceModel = [[Province alloc] init];
+                            NSDictionary *provinceDict = (NSDictionary *)obj;
+                            if (provinceDict[CODE] && [provinceDict[CODE] isKindOfClass:[NSString class]]) {
+                                provinceModel.code = (NSString *)provinceDict[CODE];
+                            }
+                            if (provinceDict[NAME] && [provinceDict[NAME] isKindOfClass:[NSString class]]) {
+                                provinceModel.name = (NSString *)provinceDict[NAME];
+                            }
+                            if (provinceDict[CITY] && [provinceDict[CITY] isKindOfClass:[NSArray class]]) {
+                                NSArray *cityArr = (NSArray *)provinceDict[CITY];
+                                NSMutableArray *cityArray = [NSMutableArray array];
+                                [cityArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                    if ([obj isKindOfClass:[NSDictionary class]]) {
+                                        NSDictionary *cityDict = (NSDictionary *)obj;
+                                        City *cityModel = [[City alloc] init];
+                                        if (cityDict[CODE] && [cityDict[CODE] isKindOfClass:[NSString class]]) {
+                                            cityModel.code = (NSString *)cityDict[CODE];
+                                        }
+                                        if (cityDict[NAME] && [cityDict[NAME] isKindOfClass:[NSString class]]) {
+                                            cityModel.name = (NSString *)cityDict[NAME];
+                                        }
+                                        if (cityDict[REGION] && [cityDict[REGION] isKindOfClass:[NSArray class]]) {
+                                            NSArray *regionArr = (NSArray *)cityDict[REGION];
+                                            NSMutableArray *regionArray = [NSMutableArray array];
+                                            [regionArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                                if ([obj isKindOfClass:[NSDictionary class]]) {
+                                                    Region *regionModel = [[Region alloc] init];
+                                                    NSDictionary *regionDict = (NSDictionary *)obj;
+                                                    if (regionDict[CODE] && [regionDict[CODE] isKindOfClass:[NSString class]]) {
+                                                        regionModel.code = (NSString *)regionDict[CODE];
+                                                    }
+                                                    if (regionDict[NAME] && [regionDict[NAME] isKindOfClass:[NSString class]]) {
+                                                        regionModel.name = (NSString *)regionDict[NAME];
+                                                    }
+                                                    [regionArray addObject:regionModel];
+                                                }
+                                            }];
+                                            cityModel.regionArray = [regionArray copy];
+                                        }
+                                        [cityArray addObject:cityModel];
+                                    }
+                                }];
+                                provinceModel.cityArray = [cityArray copy];
+                            }
+                            [stateArray addObject:provinceModel];
+                        }else if ([obj isKindOfClass:[NSArray class]]){
+                            NSArray *provinceArr = (NSArray *)obj;
+                            [provinceArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                Province *provinceModel = [[Province alloc] init];
+                                NSDictionary *provinceDict = (NSDictionary *)obj;
+                                if (provinceDict[CODE] && [provinceDict[CODE] isKindOfClass:[NSString class]]) {
+                                    provinceModel.code = (NSString *)provinceDict[CODE];
                                 }
+                                if (provinceDict[NAME] && [provinceDict[NAME] isKindOfClass:[NSString class]]) {
+                                    provinceModel.name = (NSString *)provinceDict[NAME];
+                                }
+                                if (provinceDict[CITY] && [provinceDict[CITY] isKindOfClass:[NSArray class]]) {
+                                    NSArray *cityArr = (NSArray *)provinceDict[CITY];
+                                    NSMutableArray *cityArray = [NSMutableArray array];
+                                    [cityArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                        if ([obj isKindOfClass:[NSDictionary class]]) {
+                                            NSDictionary *cityDict = (NSDictionary *)obj;
+                                            City *cityModel = [[City alloc] init];
+                                            if (cityDict[CODE] && [cityDict[CODE] isKindOfClass:[NSString class]]) {
+                                                cityModel.code = (NSString *)cityDict[CODE];
+                                            }
+                                            if (cityDict[NAME] && [cityDict[NAME] isKindOfClass:[NSString class]]) {
+                                                cityModel.name = (NSString *)cityDict[NAME];
+                                            }
+                                            if (cityDict[REGION] && [cityDict[REGION] isKindOfClass:[NSArray class]]) {
+                                                NSArray *regionArr = (NSArray *)cityDict[REGION];
+                                                NSMutableArray *regionArray = [NSMutableArray array];
+                                                [regionArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                                                    if ([obj isKindOfClass:[NSDictionary class]]) {
+                                                        Region *regionModel = [[Region alloc] init];
+                                                        NSDictionary *regionDict = (NSDictionary *)obj;
+                                                        if (regionDict[CODE] && [regionDict[CODE] isKindOfClass:[NSString class]]) {
+                                                            regionModel.code = (NSString *)regionDict[CODE];
+                                                        }
+                                                        if (regionDict[NAME] && [regionDict[NAME] isKindOfClass:[NSString class]]) {
+                                                            regionModel.name = (NSString *)regionDict[NAME];
+                                                        }
+                                                        [regionArray addObject:regionModel];
+                                                    }
+                                                }];
+                                                cityModel.regionArray = [regionArray copy];
+                                            }
+                                            [cityArray addObject:cityModel];
+                                        }
+                                    }];
+                                    provinceModel.cityArray = [cityArray copy];
+                                }
+                                [stateArray addObject:provinceModel];
                             }];
-                            provinceModel.cityArray = [cityArray copy];
                         }
-                        [stateArray addObject:provinceModel];
-                    }
-                }];
-                countryModel.provinceArray = [stateArray copy];
+                    }];
+                    countryModel.provinceArray = [stateArray copy];
+                }
             }
         }
         [countryArray addObject:countryModel];
@@ -1464,6 +1568,18 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
         self.sheetView.transform = CGAffineTransformMakeTranslation(0, -CGRectGetHeight(self.sheetView.frame));
     }];
     
+    if (self.objectToStringConverter == nil) {
+        
+        if (_ZNKPickerRealTimeResult) {
+            [self formatResult:@"" selectedIndex:self.selectedIndex selectObject:[self.pickerViewArray objectAtIndex:self.selectedIndex]];
+            _ZNKPickerRealTimeResult(self);
+        }
+    } else{
+        if (_ZNKPickerRealTimeResult) {
+            [self formatResult:@"" selectedIndex:self.selectedIndex selectObject:self.objectToStringConverter ([self.pickerViewArray objectAtIndex:self.selectedIndex])];
+            _ZNKPickerRealTimeResult(self);
+        }
+    }
 }
 
 #pragma mark - 日期
@@ -2079,9 +2195,8 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
             [self formatResult:@"" selectedIndex:index selectObject:self.selectedObject];
             return index;
         }
-        return 0;
     }
-    return [[self.pickerViewArray objectAtIndex:0] integerValue];
+    return 0;
 }
 
 #pragma mark - 选择器默认选中对象
@@ -2107,7 +2222,7 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
     if (_options[ZNKPickerViewFont] && [_options[ZNKPickerViewFont] isKindOfClass:[UIFont class]]) {
         return (UIFont *)_options[ZNKPickerViewFont];
     }
-    return [UIFont systemFontOfSize:14];
+    return [UIFont systemFontOfSize:13];
 }
 
 #pragma mark - 选择器字体停靠
@@ -2455,6 +2570,13 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
             }
         }
             break;
+        case ZNKPickerTypeArea:
+        {
+            if (_ZNKPickerConfirmResult) {
+                _ZNKPickerConfirmResult(self);
+            }
+        }
+            break;
         case ZNKPickerTypeDateMode:
         case ZNKPickerTypeTimeMode:
         case ZNKPickerTypeDateTimeMode:
@@ -2690,12 +2812,12 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                         Province *currentProvince = [self.provinceArray objectAtIndex:row];
                         self.pickerCountry.province = currentProvince.name;
                         self.cityArray = currentProvince.cityArray;
+                         [pickerView reloadComponent:1];
                         if (self.cityArray.count > 0) {
                             NSInteger com1Row = [pickerView selectedRowInComponent:1];
                             City *currentCity = (City *)[self.cityArray objectAtIndex:com1Row];
                             self.pickerCountry.city = currentCity.name;
                             self.regionArray = currentCity.regionArray;
-                            [pickerView reloadComponent:1];
                             [pickerView reloadComponent:2];
                             if (self.regionArray.count > 0) {
                                 NSInteger com2Row = [pickerView selectedRowInComponent:2];
@@ -2714,8 +2836,8 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                         City *currentCity = (City *)[self.cityArray objectAtIndex:row];
                         self.pickerCountry.city = currentCity.name;
                         self.regionArray = currentCity.regionArray;
+                        [pickerView reloadComponent:2];
                         if (self.regionArray.count > 0) {
-                            [pickerView reloadComponent:2];
                             NSInteger com2Row = [pickerView selectedRowInComponent:2];
                             Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com2Row];
                             self.pickerCountry.region = currentRegion.name;
@@ -2745,22 +2867,23 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                         Country *currentCountry = (Country *)[self.countryArray objectAtIndex:row];
                         self.pickerCountry.country = currentCountry.name;
                         self.provinceArray = currentCountry.provinceArray;
+                        [pickerView reloadComponent:1];
                         if (self.provinceArray.count > 0) {
-                            [pickerView reloadComponent:1];
                             NSInteger com1Row = [pickerView selectedRowInComponent:1];
                             Province *currentProvince = [self.provinceArray objectAtIndex:com1Row];
                             self.pickerCountry.province = currentProvince.name;
                             self.cityArray = currentProvince.cityArray;
+                            [pickerView reloadComponent:2];
                             if (self.cityArray.count > 0) {
-                                [pickerView reloadComponent:2];
                                 NSInteger com2Row = [pickerView selectedRowInComponent:2];
                                 City *currentCity = (City *)[self.cityArray objectAtIndex:com2Row];
                                 self.pickerCountry.city = currentCity.name;
                                 self.regionArray = currentCity.regionArray;
+                                [pickerView reloadComponent:3];
                                 if (self.regionArray.count > 0) {
                                     CGFloat com3Row = [pickerView selectedRowInComponent:3];
                                     Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com3Row];
-                                    [pickerView reloadComponent:3];
+                                    
                                     self.pickerCountry.region = currentRegion.name;
                                 }else{
                                     self.pickerCountry.region = @"";
@@ -2779,16 +2902,16 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                         Province *currentProvince = [self.provinceArray objectAtIndex:row];
                         self.pickerCountry.province = currentProvince.name;
                         self.cityArray = currentProvince.cityArray;
+                        [pickerView reloadComponent:2];
                         if (self.cityArray.count > 0) {
-                            [pickerView reloadComponent:2];
                             NSInteger com2Row = [pickerView selectedRowInComponent:2];
                             City *currentCity = (City *)[self.cityArray objectAtIndex:com2Row];
                             self.pickerCountry.city = currentCity.name;
                             self.regionArray = currentCity.regionArray;
+                            [pickerView reloadComponent:3];
                             if (self.regionArray.count > 0) {
                                 CGFloat com3Row = [pickerView selectedRowInComponent:3];
                                 Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com3Row];
-                                [pickerView reloadComponent:3];
                                 self.pickerCountry.region = currentRegion.name;
                             }else{
                                 self.pickerCountry.region = @"";
@@ -2803,10 +2926,10 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                         City *currentCity = (City *)[self.cityArray objectAtIndex:row];
                         self.pickerCountry.city = currentCity.name;
                         self.regionArray = currentCity.regionArray;
+                        [pickerView reloadComponent:3];
                         if (self.regionArray.count > 0) {
                             CGFloat com3Row = [pickerView selectedRowInComponent:3];
                             Region *currentRegion = (Region *)[self.regionArray objectAtIndex:com3Row];
-                            [pickerView reloadComponent:3];
                             self.pickerCountry.region = currentRegion.name;
                         }else{
                             self.pickerCountry.region = @"";
@@ -2841,14 +2964,14 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                 {
                     if (self.objectToStringConverter == nil) {
                         
-                        if (_ZNKPickerConfirmResult) {
+                        if (_ZNKPickerRealTimeResult) {
                             [self formatResult:@"" selectedIndex:row selectObject:[self.pickerViewArray objectAtIndex:row]];
-                            _ZNKPickerConfirmResult(self);
+                            _ZNKPickerRealTimeResult(self);
                         }
                     } else{
-                        if (_ZNKPickerConfirmResult) {
+                        if (_ZNKPickerRealTimeResult) {
                             [self formatResult:@"" selectedIndex:row selectObject:self.objectToStringConverter ([self.pickerViewArray objectAtIndex:row])];
-                            _ZNKPickerConfirmResult(self);
+                            _ZNKPickerRealTimeResult(self);
                         }
                     }
                 }
@@ -2905,7 +3028,34 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                             break;
                     }
                 }else{
-                    
+                    switch (component) {
+                        case 0:
+                        {
+                            CGRect frame = CGRectMake(0.0, 0.0, CGRectGetWidth(pickerView.frame) / 4, self.tableViewRowHeight);
+                            customPickerView = [[UIView alloc] initWithFrame: frame];
+                        }
+                            break;
+                        case 1:
+                        {
+                            CGRect frame = CGRectMake(0.0, CGRectGetWidth(pickerView.frame) / 4, CGRectGetWidth(pickerView.frame) / 4, self.tableViewRowHeight);
+                            customPickerView = [[UIView alloc] initWithFrame: frame];
+                        }
+                            break;
+                        case 2:
+                        {
+                            CGRect frame = CGRectMake(0.0, CGRectGetWidth(pickerView.frame) / 4 * (2 * 4), CGRectGetWidth(pickerView.frame) / 3, self.tableViewRowHeight);
+                            customPickerView = [[UIView alloc] initWithFrame: frame];
+                        }
+                            break;
+                        case 3:
+                        {
+                            CGRect frame = CGRectMake(0.0, CGRectGetWidth(pickerView.frame) / 4 * (3 * 4), CGRectGetWidth(pickerView.frame) / 4, self.tableViewRowHeight);
+                            customPickerView = [[UIView alloc] initWithFrame: frame];
+                        }
+                            break;
+                        default:
+                            break;
+                    }
                 }
                 CGRect labelFrame = CGRectMake(0.0, 0.0, CGRectGetWidth(customPickerView.frame), self.tableViewRowHeight); // 35 or 44
                 pickerViewLabel = [[UILabel alloc] initWithFrame:labelFrame];
@@ -2932,27 +3082,82 @@ NSString * const ZNKCityPickerChinaOnly             = @"ZNKCityPickerChinaOnly";
                 switch (component) {
                     case 0:
                     {
-                        Province *pro = (Province *)[self.provinceArray objectAtIndex:row];
-                        [pickerViewLabel setText:pro.name];
+                        if (self.provinceArray.count > 0) {
+                            Province *pro = (Province *)[self.provinceArray objectAtIndex:row];
+                            [pickerViewLabel setText:pro.name];
+                        }else{
+                            [pickerViewLabel setText:@""];
+                        }
                     }
                         break;
                     case 1:
                     {
-                        City *pro = (City *)[self.cityArray objectAtIndex:row];
-                        [pickerViewLabel setText:pro.name];
+                        if (self.cityArray.count > 0) {
+                            City *pro = (City *)[self.cityArray objectAtIndex:row];
+                            [pickerViewLabel setText:pro.name];
+                        }else{
+                            [pickerViewLabel setText:@""];
+                        }
                     }
                         break;
                     case 2:
                     {
-                        Region *pro = (Region *)[self.regionArray objectAtIndex:row];
-                        [pickerViewLabel setText:pro.name];
+                        if (self.regionArray.count > 0) {
+                            Region *pro = (Region *)[self.regionArray objectAtIndex:row];
+                            [pickerViewLabel setText:pro.name];
+                        }else{
+                            [pickerViewLabel setText:@""];
+                        }
                     }
                         break;
                     default:
                         break;
                 }
             }else{
-                
+                switch (component) {
+                    case 0:
+                    {
+                        if (self.countryArray.count > 0) {
+                            Country *pro = (Country *)[self.countryArray objectAtIndex:row];
+                            [pickerViewLabel setText:pro.name];
+                        }else{
+                            [pickerViewLabel setText:@""];
+                        }
+                    }
+                        break;
+                    case 1:
+                    {
+                        if (self.provinceArray.count > 0) {
+                            Province *pro = (Province *)[self.provinceArray objectAtIndex:row];
+                            [pickerViewLabel setText:pro.name];
+                        }else{
+                            [pickerViewLabel setText:@""];
+                        }
+                    }
+                        break;
+                    case 2:
+                    {
+                        if (self.cityArray.count > 0) {
+                            City *pro = (City *)[self.cityArray objectAtIndex:row];
+                            [pickerViewLabel setText:pro.name];
+                        }else{
+                            [pickerViewLabel setText:@""];
+                        }
+                    }
+                        break;
+                    case 3:
+                    {
+                        if (self.regionArray.count > 0) {
+                            Region *pro = (Region *)[self.regionArray objectAtIndex:row];
+                            [pickerViewLabel setText:pro.name];
+                        }else{
+                            [pickerViewLabel setText:@""];
+                        }
+                    }
+                        break;
+                    default:
+                        break;
+                }
             }
             
             

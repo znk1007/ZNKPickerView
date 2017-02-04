@@ -69,7 +69,7 @@ extern NSString * const ZNKTableRowHeight;
 extern NSString * const ZNKTextAlignment;
 extern NSString * const ZNKShowsSelectionIndicator;
 extern NSString * const ZNKPickerViewTitleColor;
-extern NSString * const ZNKCityPickerChinaOnly;
+extern NSString * const ZNKCityPickerChinaOnly;//暂无效果
 
 
 typedef enum : NSUInteger {
